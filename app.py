@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timedelta
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -45,6 +46,25 @@ WEATHER_CODES = {
     99: ("Severe Storm + Hail", "Major convective threat."),
 }
 
+METNO_SYMBOLS = {
+    "clearsky": ("Clear", "Sun is in full command."),
+    "fair": ("Mostly Clear", "Calm skies with a little drama."),
+    "partlycloudy": ("Partly Cloudy", "Cloud cover with swagger."),
+    "cloudy": ("Overcast", "Heavy sky, serious mood."),
+    "fog": ("Fog", "Low visibility, high cinematic value."),
+    "lightrain": ("Light Rain", "Light rain in the area."),
+    "rain": ("Rain", "The sky is committing."),
+    "heavyrain": ("Heavy Rain", "Hard rain, no half measures."),
+    "lightsnow": ("Light Snow", "Light snowfall."),
+    "snow": ("Snow", "Accumulating snow on deck."),
+    "heavysnow": ("Heavy Snow", "Serious snowfall."),
+    "sleet": ("Rain Showers", "Burst rain on and off."),
+    "rainshowers": ("Rain Showers", "Burst rain on and off."),
+    "heavyrainshowers": ("Heavy Showers", "Aggressive showers moving through."),
+    "snowshowers": ("Snow Showers", "Short snow bursts."),
+    "thunderstorm": ("Thunderstorm", "Electrical chaos in the atmosphere."),
+}
+
 
 def fetch_json(url: str, extra_headers: dict[str, str] | None = None) -> dict:
     headers = {
@@ -67,6 +87,45 @@ def query_locations(query: str, count: int) -> list[dict]:
     return payload.get("results") or []
 
 
+def query_locations_nominatim(query: str, count: int) -> list[dict]:
+    params = urllib.parse.urlencode(
+        {
+            "q": query,
+            "format": "jsonv2",
+            "limit": count,
+            "addressdetails": 1,
+        }
+    )
+    payload = fetch_json(
+        f"https://nominatim.openstreetmap.org/search?{params}",
+        extra_headers={"Accept-Language": "en-US,en;q=0.9"},
+    )
+    results = []
+    for place in payload:
+        address = place.get("address") or {}
+        city = (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or address.get("hamlet")
+            or address.get("municipality")
+            or address.get("suburb")
+            or place.get("name")
+        )
+        if not city:
+            continue
+        results.append(
+            {
+                "name": city,
+                "admin1": address.get("state"),
+                "country": address.get("country"),
+                "latitude": float(place["lat"]),
+                "longitude": float(place["lon"]),
+            }
+        )
+    return results
+
+
 def location_query_variants(query: str) -> list[str]:
     cleaned = " ".join(query.replace(",", " ").split())
     variants = [query.strip(), cleaned]
@@ -85,9 +144,18 @@ def location_query_variants(query: str) -> list[str]:
 
 def geocode_city(city: str) -> dict:
     for variant in location_query_variants(city):
-        results = query_locations(variant, 1)
-        if results:
-            return results[0]
+        try:
+            results = query_locations(variant, 1)
+            if results:
+                return results[0]
+        except (urllib.error.URLError, TimeoutError):
+            pass
+        try:
+            results = query_locations_nominatim(variant, 1)
+            if results:
+                return results[0]
+        except (urllib.error.URLError, TimeoutError):
+            pass
     raise LookupError(f"No forecast target found for '{city}'.")
 
 
@@ -95,12 +163,22 @@ def search_locations(query: str) -> list[dict]:
     results = []
     seen = set()
     for variant in location_query_variants(query):
-        for place in query_locations(variant, 8):
-            key = (place["name"], place.get("admin1"), place.get("country"), place["latitude"], place["longitude"])
-            if key in seen:
-                continue
-            seen.add(key)
-            results.append(place)
+        providers = []
+        try:
+            providers.append(query_locations(variant, 8))
+        except (urllib.error.URLError, TimeoutError):
+            pass
+        try:
+            providers.append(query_locations_nominatim(variant, 8))
+        except (urllib.error.URLError, TimeoutError):
+            pass
+        for provider_results in providers:
+            for place in provider_results:
+                key = (place["name"], place.get("admin1"), place.get("country"), place["latitude"], place["longitude"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                results.append(place)
         if results:
             break
     suggestions = []
@@ -167,6 +245,118 @@ def reverse_geocode_nominatim(latitude: float, longitude: float) -> dict | None:
     }
 
 
+def metno_label(symbol_code: str | None) -> tuple[str, str]:
+    if not symbol_code:
+        return ("Wild Weather", "The atmosphere is improvising.")
+    key = symbol_code.split("_", 1)[0]
+    return METNO_SYMBOLS.get(key, ("Wild Weather", "The atmosphere is improvising."))
+
+
+def build_forecast_metno(place: dict) -> dict:
+    latitude = place["latitude"]
+    longitude = place["longitude"]
+    params = urllib.parse.urlencode({"lat": latitude, "lon": longitude})
+    payload = fetch_json(
+        f"https://api.met.no/weatherapi/locationforecast/2.0/compact?{params}",
+        extra_headers={"User-Agent": "GangstaCast/1.0 (https://www.gangstacast.com)"},
+    )
+    timeseries = payload["properties"]["timeseries"]
+    current_entry = timeseries[0]
+    current_details = current_entry["data"]["instant"]["details"]
+    current_symbol = (
+        current_entry["data"].get("next_1_hours", {}).get("summary", {}).get("symbol_code")
+        or current_entry["data"].get("next_6_hours", {}).get("summary", {}).get("symbol_code")
+    )
+    title, tagline = metno_label(current_symbol)
+
+    hourly_outlook = []
+    for entry in timeseries[:12]:
+        details = entry["data"]["instant"]["details"]
+        symbol = (
+            entry["data"].get("next_1_hours", {}).get("summary", {}).get("symbol_code")
+            or entry["data"].get("next_6_hours", {}).get("summary", {}).get("symbol_code")
+        )
+        hour_title, _ = metno_label(symbol)
+        precip_amount = entry["data"].get("next_1_hours", {}).get("details", {}).get("precipitation_amount", 0)
+        hourly_outlook.append(
+            {
+                "time": entry["time"].replace("Z", ""),
+                "label": hour_title,
+                "weatherCode": 0,
+                "temperature": round(details.get("air_temperature", 0)),
+                "precipChance": min(100, round(float(precip_amount) * 25)),
+                "windSpeed": round(details.get("wind_speed", 0)),
+            }
+        )
+
+    daily_groups: dict[str, list[dict]] = {}
+    for entry in timeseries:
+        day = entry["time"][:10]
+        daily_groups.setdefault(day, []).append(entry)
+        if len(daily_groups) == 7 and day != list(daily_groups.keys())[-1]:
+            break
+
+    days = []
+    for day, entries in list(daily_groups.items())[:7]:
+        temps = [item["data"]["instant"]["details"].get("air_temperature", 0) for item in entries]
+        winds = [item["data"]["instant"]["details"].get("wind_speed", 0) for item in entries]
+        precips = [
+            item["data"].get("next_1_hours", {}).get("details", {}).get("precipitation_amount", 0) for item in entries
+        ]
+        midday = entries[min(len(entries) // 2, len(entries) - 1)]
+        symbol = (
+            midday["data"].get("next_6_hours", {}).get("summary", {}).get("symbol_code")
+            or midday["data"].get("next_1_hours", {}).get("summary", {}).get("symbol_code")
+        )
+        label, _ = metno_label(symbol)
+        sunrise = f"{day}T06:00:00"
+        sunset = f"{day}T20:00:00"
+        days.append(
+            {
+                "date": day,
+                "label": label,
+                "weatherCode": 0,
+                "tempMax": round(max(temps)),
+                "tempMin": round(min(temps)),
+                "precipChance": min(100, round(max(precips) * 25)),
+                "windMax": round(max(winds)),
+                "sunrise": sunrise,
+                "sunset": sunset,
+            }
+        )
+
+    return {
+        "location": {
+            "city": place["name"],
+            "admin1": place.get("admin1"),
+            "country": place.get("country"),
+            "latitude": latitude,
+            "longitude": longitude,
+            "timezone": "Local Time",
+        },
+        "current": {
+            "title": title,
+            "tagline": tagline,
+            "temperature": round(current_details.get("air_temperature", 0)),
+            "feelsLike": round(current_details.get("air_temperature", 0)),
+            "humidity": round(current_details.get("relative_humidity", 0)),
+            "precipitation": round(
+                current_entry["data"].get("next_1_hours", {}).get("details", {}).get("precipitation_amount", 0), 1
+            ),
+            "cloudCover": round(current_details.get("cloud_area_fraction", 0)),
+            "windSpeed": round(current_details.get("wind_speed", 0)),
+            "windGusts": round(current_details.get("wind_speed_of_gust", current_details.get("wind_speed", 0))),
+            "pressure": round(current_details.get("air_pressure_at_sea_level", 0)),
+            "visibility": 10.0,
+            "uvIndex": round(current_details.get("ultraviolet_index_clear_sky", 0), 1),
+            "weatherCode": 0,
+            "isDay": True,
+        },
+        "hourly": hourly_outlook,
+        "daily": days,
+    }
+
+
 def resolve_place(city: str | None = None, latitude: float | None = None, longitude: float | None = None) -> dict:
     if city:
         return geocode_city(city)
@@ -191,8 +381,7 @@ def resolve_place(city: str | None = None, latitude: float | None = None, longit
     }
 
 
-def build_forecast(city: str | None = None, latitude: float | None = None, longitude: float | None = None) -> dict:
-    place = resolve_place(city=city, latitude=latitude, longitude=longitude)
+def build_forecast_open_meteo(place: dict) -> dict:
     params = urllib.parse.urlencode(
         {
             "latitude": place["latitude"],
@@ -316,6 +505,14 @@ def build_forecast(city: str | None = None, latitude: float | None = None, longi
         "hourly": hourly_outlook,
         "daily": days,
     }
+
+
+def build_forecast(city: str | None = None, latitude: float | None = None, longitude: float | None = None) -> dict:
+    place = resolve_place(city=city, latitude=latitude, longitude=longitude)
+    try:
+        return build_forecast_open_meteo(place)
+    except (urllib.error.URLError, TimeoutError):
+        return build_forecast_metno(place)
 
 
 class WeatherHandler(SimpleHTTPRequestHandler):
