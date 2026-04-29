@@ -1,15 +1,18 @@
 const RECENT_CITIES_KEY = "weatherstation-recent-cities";
 
 const state = {
-  city: "Los Angeles",
+  city: "Langston, Oklahoma",
   unit: "imperial",
   forecast: null,
+  startupLoaded: false,
+  startupResolved: false,
   suggestions: [],
   selectedSuggestionIndex: -1,
   suggestionRequestId: 0,
   suggestionQuery: "",
   articles: [],
   articleCategory: "all",
+  articleLocationKey: "",
 };
 
 const elements = {
@@ -112,6 +115,10 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+function shuffled(list) {
+  return [...list].sort(() => Math.random() - 0.5);
+}
+
 function thunderLikely(code) {
   return [95, 96, 99].includes(code);
 }
@@ -182,6 +189,22 @@ function renderUnitButtons() {
 
 function formatLocationLabel(location) {
   return [location.city, location.admin1, location.country].filter(Boolean).join(", ");
+}
+
+function hasNamedCity(location) {
+  return Boolean(location?.city && location.city !== "Current Location");
+}
+
+function storyPlace(location) {
+  return hasNamedCity(location) ? location.city : "your block";
+}
+
+function storyPossessivePlace(location) {
+  return hasNamedCity(location) ? `${location.city}'s` : "your block's";
+}
+
+function displayLocationLabel(location) {
+  return hasNamedCity(location) ? formatLocationLabel(location) : "Current Location";
 }
 
 function setActiveButtons(buttons, value, key = "tab") {
@@ -294,9 +317,9 @@ function getDispatches(data) {
   const { current, hourly, location } = data;
   const rainPeak = Math.max(...hourly.map((entry) => entry.precipChance), 0);
 
-  let roast = `In ${location.city}, the sky got a shady look like it just said "trust me" with no plan.`;
+  let roast = `On ${storyPlace(location)}, the sky got a shady look like it just said "trust me" with no plan.`;
   let advice = "Dress in layers and keep your business mobile in case outside start acting suspicious and disrespectful.";
-  let excuse = `I was not late. ${location.city} weather was outside creating obstacles, confusion, and unnecessary bitch-ass drama for the working people.`;
+  let excuse = `I was not late. ${storyPlace(location)} weather was outside creating obstacles, confusion, and unnecessary bitch-ass drama for the working people.`;
 
   if (thunderLikely(current.weatherCode)) {
     roast = "Thunder got the ceiling sounding like somebody upstairs losing a folding chair match while cussing everybody out through the floor.";
@@ -325,7 +348,7 @@ function getDispatches(data) {
 
 function getNeighborhoodBulletins(location) {
   return [
-    `Store manager in ${location.city} says the slushie machine got stage fright and shut down before the after-school rush.`,
+    `Store manager on ${storyPlace(location)} says the slushie machine got stage fright and shut down before the after-school rush.`,
     `Unofficial block advisory: if the bus late, blame traffic, weather, and one loud-ass argument near the corner store.`,
     `Neighborhood memo says somebody's uncle is still on the porch giving a weather speech nobody asked for.`,
     `Alert from the hood desk: beauty supply parking lot energy remains chaotic with a 90% chance of horn abuse.`,
@@ -336,19 +359,19 @@ function getNeighborhoodBulletins(location) {
 function getBoozeRuns(location) {
   return [
     {
-      banner: `${location.city} night crews reportedly targeting cognac, pineapple soda, and one suspiciously warm bag of ice.`,
+      banner: `${storyPlace(location)} night crews reportedly targeting cognac, pineapple soda, and one suspiciously warm bag of ice.`,
       plan: "Primary move: grab drinks before the crowd gets loud and one dude starts explaining his mixtape.",
       line: "Line moving slow because somebody buying minis, loose chips, and arguing about lottery science.",
       risk: "Moderate hood risk. High chance of double parking, cigarette borrowing, and one dumb-ass debate in the doorway.",
     },
     {
-      banner: `Beer fridge in ${location.city} currently under pressure from after-work survivors, porch philosophers, and people dodging the damn rain.`,
+      banner: `Beer fridge on ${storyPlace(location)} currently under pressure from after-work survivors, porch philosophers, and people dodging the damn rain.`,
       plan: "Recommended run: tall cans, blunt wraps, anti-social snacks, and a fast exit before the weather switch up.",
       line: "Cashier line unstable. Somebody counting crumpled bills like a hostage negotiator.",
       risk: "Elevated nonsense. Wind, booze, and side-eyes may combine into a parking-lot misunderstanding.",
     },
     {
-      banner: `Late-night bottle mission in ${location.city} expected to be complicated by fake weather confidence and one busted card reader.`,
+      banner: `Late-night bottle mission on ${storyPlace(location)} expected to be complicated by fake weather confidence and one busted card reader.`,
       plan: "Best route: hit the nearest store, ignore all opinions by the front door, and keep receipts like legal evidence.",
       line: "Current line status says two regulars talking too much and one cousin buying exactly one stale-ass honey bun.",
       risk: "High petty-crime energy. Somebody definitely trying to sell cologne, headphones, or an unlocked phone by the entrance.",
@@ -358,7 +381,7 @@ function getBoozeRuns(location) {
 
 function getCrimeBlotter(location) {
   return [
-    `Open container of gossip spilled across ${location.city} after one auntie spotted her ex buying storm chips and cheap rum before sunset.`,
+    `Open container of gossip spilled across ${storyPlace(location)} after one auntie spotted her ex buying storm chips and cheap rum before sunset.`,
     `Umbrella assault reported near the bus stop. Witnesses say the wind swung first and the umbrella folded like a snitch.`,
     `Parking-lot diplomacy failed outside the liquor store when two Buicks tried to claim the same crooked-ass space at once.`,
     `Suspicious weather loitering observed over the block. Clouds seen circling with criminal intent and zero explanation.`,
@@ -369,11 +392,11 @@ function getCrimeBlotter(location) {
 
 function getScannerIncidents(location) {
   return [
-    `SCANNER 1: ${location.city} corner store reports grape soda shelf wiped the fuck out by 2:14 PM. One cashier described the crowd as "thirsty, dramatic, and slightly feral."`,
+    `SCANNER 1: ${storyPlace(location)} corner store reports grape soda shelf wiped the fuck out by 2:14 PM. One cashier described the crowd as "thirsty, dramatic, and slightly feral."`,
     `SCANNER 2: Watermelon stack at the market collapsed after one uncle squeezed every damn melon like he was solving crimes with his fingertips.`,
     `SCANNER 3: EBT reader at the discount mart went down again. Line immediately transformed into a TED Talk about struggle, wires, and weak-ass management.`,
     `SCANNER 4: Beauty supply parking lot experiencing a hostile merge situation and two separate acts of horn-based disrespect.`,
-    `SCANNER 5: Somebody on ${location.city}'s east side reported a busted hydrant, three wet kids, and one auntie cussing the city with biblical confidence.`,
+    `SCANNER 5: Somebody on ${storyPossessivePlace(location)} east side reported a busted hydrant, three wet kids, and one auntie cussing the city with biblical confidence.`,
     `SCANNER 6: Chicken spot says fryer oil acting suspicious, drink machine dripping lies, and customers still ordering like rent not due.`,
     `SCANNER 7: Bus stop bench leaning like it heard all the gossip and want no more part of this raggedy-ass block.`,
     `SCANNER 8: Local porch committee confirms the weather got a slick mouth, fake smile, and too much damn free time.`,
@@ -382,7 +405,7 @@ function getScannerIncidents(location) {
 
 function getPollResponse(key, location) {
   const responses = {
-    weather: `Poll closed: 41% say this is plain weather bullshit, 33% say the sky woke up angry, and 26% say somebody need to cuss out a meteorologist in ${location.city}.`,
+    weather: `Poll closed: 41% say this is plain weather bullshit, 33% say the sky woke up angry, and 26% say somebody need to cuss out a meteorologist on ${storyPlace(location)}.`,
     government: `Poll closed: 58% blame the city, 22% blame weak infrastructure, and the rest blame one lazy official who definitely "knew this shit was coming."`,
     haters: `Poll closed: 63% say haters hexed the block, 19% say an ex did candle work, and 18% say the vibes simply broke as hell this week.`,
     mercury: `Poll closed: 77% say Mercury is back on dickhead timing, while three aunties insist planets need ass-whippings too.`,
@@ -395,7 +418,7 @@ function getSuspectFile(suspect, location) {
     sun: {
       title: "PRIMARY SUSPECT: THE SUN",
       deck: "Charged with overheating sidewalks, bleaching car paint, and flexing too hard on innocent foreheads.",
-      body: `Detectives in ${location.city} say the sun has been seen hanging high, talking greasy, and making everybody's car seat feel like attempted murder. Witnesses report excessive shining, aggressive glare, and repeated acts of sweaty-ass intimidation.`,
+      body: `Detectives on ${storyPlace(location)} say the sun has been seen hanging high, talking greasy, and making everybody's car seat feel like attempted murder. Witnesses report excessive shining, aggressive glare, and repeated acts of sweaty-ass intimidation.`,
     },
     wind: {
       title: "PRIMARY SUSPECT: THE WIND",
@@ -405,7 +428,7 @@ function getSuspectFile(suspect, location) {
     rain: {
       title: "PRIMARY SUSPECT: THE RAIN",
       deck: "Known to target clean sneakers, fresh errands, and people who just said 'it don't look too bad outside.'",
-      body: `Investigators say the rain often waits until folks leave the house to start its shady-ass performance. Charges include sock sabotage, puddle fraud, and emotional damage to one decent hoodie in ${location.city}.`,
+      body: `Investigators say the rain often waits until folks leave the house to start its shady-ass performance. Charges include sock sabotage, puddle fraud, and emotional damage to one decent hoodie on ${storyPlace(location)}.`,
     },
     clouds: {
       title: "PRIMARY SUSPECT: THE CLOUDS",
@@ -420,7 +443,7 @@ function getPopupAds(location) {
   return [
     {
       title: "BOOTLEG METEOROLOGY CLASSES",
-      copy: `Learn how to point at a cloud, cuss at it, and call yourself chief weather officer of ${location.city}. Limited folding chairs available.`,
+      copy: `Learn how to point at a cloud, cuss at it, and call yourself chief weather officer of ${storyPlace(location)}. Limited folding chairs available.`,
     },
     {
       title: "UNC DARNELL'S PORCH RADAR",
@@ -439,7 +462,7 @@ function getPopupAds(location) {
 
 function getAlertMessages(location) {
   return [
-    `CITYWIDE ALERT: ${location.city.toUpperCase()} CURRENTLY EXPERIENCING HIGH LEVELS OF OUTSIDE BULLSHIT.`,
+    `CITYWIDE ALERT: ${storyPlace(location).toUpperCase()} CURRENTLY EXPERIENCING HIGH LEVELS OF OUTSIDE BULLSHIT.`,
     `BLOCK ADVISORY: DO NOT LET THIS NICE-LOOKING SKY FOOL YOUR DUMB ASS.`,
     `STREET WARNING: WIND, HEAT, OR RAIN MAY TRY TO HUMBLE YOU IN PUBLIC TODAY.`,
     `EMERGENCY BULLETIN: SOMEBODY UNCLE ALREADY BLAMED THE FORECAST FOR EVERYTHING SINCE 1998.`,
@@ -449,7 +472,7 @@ function getAlertMessages(location) {
 
 function getGossipSeeds(location) {
   return [
-    `Word on the block is ${location.city} got one cloud that be circling like it owe everybody money.`,
+    `Word on the block is ${storyPlace(location)} got one cloud that be circling like it owe everybody money.`,
     "Somebody near the liquor store swears the heat only pull up when they just got their hair done.",
     "A woman by the bus stop said the weather app lied and now she beefing with technology itself.",
     "Two cousins are arguing whether the wind hate braids specifically or just joy in general.",
@@ -459,7 +482,7 @@ function getGossipSeeds(location) {
 
 function getHotlineMessages(location) {
   return [
-    `HOTLINE MESSAGE: "Why the hell is ${location.city} sunny and shady at the same damn time?"`,
+    `HOTLINE MESSAGE: "Why the hell is ${storyPlace(location)} sunny and shady at the same damn time?"`,
     'HOTLINE MESSAGE: "If this wind touch my plate again, I am writing my congressman."',
     'HOTLINE MESSAGE: "Tell the humidity to square up or calm down, pick one."',
     'HOTLINE MESSAGE: "I knew them clouds was fake when they smiled too hard this morning."',
@@ -468,7 +491,7 @@ function getHotlineMessages(location) {
 
 function getReporterTake(reporter, location) {
   const takes = {
-    "big-shirl": `BIG SHIRL reporting live from ${location.city}: "The sky got too much mouth and not enough accountability. Back to you, player."`,
+    "big-shirl": `BIG SHIRL reporting live from ${storyPlace(location)}: "The sky got too much mouth and not enough accountability. Back to you, player."`,
     "lil-ree": `LIL REE here: "I checked three corner stores and two aunties. Consensus says the weather acting foul and the snacks are overpriced."`,
     "unc-darnell": `UNC DARNELL on the porch: "I seen worse in '86, but this bullshit still unnecessary. Y'all be safe and stop trusting pretty clouds."`,
   };
@@ -478,10 +501,10 @@ function getReporterTake(reporter, location) {
 function fakeArticles(data) {
   const { location, current, daily } = data;
   const firstDay = daily[0];
-  return [
+  const articles = [
     {
       category: "weather",
-      title: `${location.city} resident accuses ${firstDay.label.toLowerCase()} of "doing too damn much before noon" and demands a public apology.`,
+      title: `${storyPlace(location)} resident accuses ${firstDay.label.toLowerCase()} of "doing too damn much before noon" and demands a public apology.`,
       body:
         "Witnesses report the atmosphere came in loud, overdressed, half-cocked, and unwilling to explain a single damn thing. One woman near the donut shop said the whole sky looked like it had been rehearsing fake behavior since sunrise. Neighborhood analysts agreed that the weather had entered the day with entirely too much confidence for something acting that suspicious.",
       deck: "Residents say the atmosphere showed up with a slick mouth and no accountability.",
@@ -556,18 +579,182 @@ function fakeArticles(data) {
         "Sources say two aunties brokered a peace deal near Dryer 6 while a toddler ate a cheese puff in silence. Witnesses described a tense economy built on loose coins, wrinkled dollar bills, and desperate eye contact. Management posted a note saying the machine was being serviced, but nobody in the building believed that shit for even one second.",
       deck: "Quarter negotiations resume after yet another mechanical betrayal.",
     },
+    {
+      category: "street",
+      title: `Man on BMX bike circles the block nine times screaming free advice nobody asked for, then blames the heat for his philosophy.`,
+      body:
+        `Neighbors on ${storyPlace(location)} say the rider started with simple greetings and gradually evolved into a full TED Talk about loyalty, tire pressure, and why the city owes him compensation. The speech ended only when somebody's grandmother yelled out the window and asked if he had a damn job.`,
+      deck: "Residents describe the performance as cardio-powered foolishness with no clear sponsor.",
+    },
+    {
+      category: "store",
+      title: `Corner store runs out of grape soda, peach rings, and patience within fourteen disrespectful minutes.`,
+      body:
+        "Cashiers say the rush began when one dude yelled 'they still got the cold ones!' and the whole front end turned into a survival exercise. Customers reported emotional whiplash, warm tempers, and at least one suspicious side deal near the pickle jar.",
+      deck: "Snack-and-soda infrastructure remains shaky under real pressure.",
+    },
+    {
+      category: "services",
+      title: `City bus pulls off while two cousins still arguing at the back door, creating fresh beef at the stop.`,
+      body:
+        "Transit witnesses say the operator had reached a spiritual limit and refused to host one more second of open-door debate. The cousins accused the route of moving funny, while bystanders mostly accused everyone involved of being loud and late on purpose.",
+      deck: "Public transportation once again forced to referee nonsense it did not create.",
+    },
+    {
+      category: "street",
+      title: `Liquor-store parking lot cookout nearly starts by accident after one trunk opened with hot links, dominoes, and no adult supervision.`,
+      body:
+        "People nearby insist the scene escalated organically from music, sunlight, and one overconfident folding table. Authorities considered shutting it down, but half the witnesses were already fixing plates and speaking in unhelpful hypotheticals.",
+      deck: "What began as a quick beer run reportedly drifted into community event territory.",
+    },
+    {
+      category: "services",
+      title: `Apartment complex group chat melts down after mystery person leaves full-size couch by the dumpster like it's a peace offering.`,
+      body:
+        `Residents on ${storyPlace(location)} traded accusations, blurry photos, and typed threats in all caps for nearly three hours. One tenant claimed the couch had "criminal posture" from the start, while another suggested it was probably connected to the same person who never breaks down boxes.`,
+      deck: "Digital neighborhood diplomacy fails again under furniture-related stress.",
+    },
+    {
+      category: "store",
+      title: `Smoke shop clerk says blunt-wrap shortage got customers speaking like hostage negotiators and amateur economists.`,
+      body:
+        "The situation deteriorated when a regular tried to buy every remaining pack and call it community leadership. Several people objected, one man invented a pricing conspiracy, and the clerk simply stared into middle distance like his soul clocked out at lunch.",
+      deck: "Supply-chain panic reaches petty but fully theatrical levels.",
+    },
+    {
+      category: "street",
+      title: `Loose pit bull escapes cousin's yard, ignores everybody, then spends forty minutes just judging the block from the shade.`,
+      body:
+        "Despite intense neighborhood concern, the dog reportedly displayed zero aggression and one unbelievable amount of side-eye. Children were called inside, elders gave commentary, and three grown men with zero official training formed a retrieval squad that mostly argued about snacks.",
+      deck: "Animal control was discussed loudly and contacted much later.",
+    },
+    {
+      category: "weather",
+      title: `Local man insists breeze "feels federal" and refuses to elaborate beyond one hard stare and a cigarette.`,
+      body:
+        "Porch meteorologists say the wind entered the neighborhood with badge energy, clipboard behavior, and way too much curiosity about unsecured receipts. Nobody could prove anything, but nobody felt comfortable either.",
+      deck: "Street science continues to produce uncomfortable but vivid findings.",
+    },
+    {
+      category: "store",
+      title: `Beauty supply employee forced to mediate standoff over last edge-control jar like it was a hostage situation.`,
+      body:
+        "Witnesses say both claimants presented compelling arguments, shaky receipts, and enough attitude to heat the entire aisle. The jar was eventually placed behind the counter under protective watch while management evaluated who was being the bigger damn liar.",
+      deck: "Retail peacekeeping units stretched thin by beauty emergencies.",
+    },
+    {
+      category: "services",
+      title: `Water shut off on one side of the block, forcing everybody to suddenly become experts in city negligence and bucket strategy.`,
+      body:
+        `Families on ${storyPlace(location)} responded with text threads, borrowed gallons, and one impromptu porch hearing about taxes, pipes, and the collapse of civilization. City voicemail remained full, unhelpful, and spiritually disrespectful.`,
+      deck: "Hydration logistics now being handled with prayer and borrowed coolers.",
+    },
+    {
+      category: "street",
+      title: `Dice game pauses after one player accuses the sun of helping his cousin cheat by providing biased lighting.`,
+      body:
+        "No evidence of solar favoritism has been produced, but that did not stop a thirty-minute closing statement with visual aids and profanity. Neighbors describe the accusation as weak, loud, and somehow still more organized than most city meetings.",
+      deck: "Game integrity remains under cloudless but questionable review.",
+    },
+    {
+      category: "weather",
+      title: `Forecast reaches awkward stage where everybody keeps saying "it ain't even that bad" while clearly suffering.`,
+      body:
+        "Observers report a neighborhood-wide epidemic of denial, damp shirts, and unnecessary bravado. The mood remained stable until one person admitted they were miserable, at which point six others instantly agreed and began blaming the atmosphere like it owed back child support.",
+      deck: "Collective lying lasts only until the first honest sweat stain appears.",
+    },
+    {
+      category: "store",
+      title: `Fish market cat becomes local hero after slapping a roach off the chips rack with veteran precision.`,
+      body:
+        "Customers applauded, one employee whispered 'that's my dog,' and management briefly considered putting the animal on payroll. The cat, however, declined comment and returned to loaf position near the freezer like this sort of greatness was routine.",
+      deck: "Unofficial pest-control operations continue to outperform paid systems.",
+    },
+    {
+      category: "services",
+      title: `Power company says outage was temporary; block says that don't explain melted groceries, broken AC, and two ruined lineups.`,
+      body:
+        "Residents accepted the statement the way people accept obvious lies from somebody already halfway backing toward their car. One elder summarized the community response best by saying, 'temporary to who, bitch?' before returning indoors to protect the last of the ice.",
+      deck: "Official messaging once again fails to cool tempers or refrigerators.",
+    },
+    {
+      category: "street",
+      title: `Porch chair launched across yard during family argument, immediately reclassified as evidence and community property.`,
+      body:
+        "Nobody was harmed, but everybody had a theory. Witnesses spent the next hour reconstructing the flight path, debating motive, and insisting the chair had seen too much over the years to stay silent any longer.",
+      deck: "Domestic drama briefly crosses into furniture forensics.",
+    },
+    {
+      category: "store",
+      title: `Mini-mart freezer starts screaming like a demon, customers continue shopping anyway because the wings still looked decent.`,
+      body:
+        "Staff members described the noise as concerning, spiritual, and above their pay grade. Shoppers mostly nodded, grabbed what they needed, and agreed to pretend the whole thing felt normal as long as the popsicles stayed alive.",
+      deck: "Retail standards remain flexible when hunger and convenience team up.",
+    },
+    {
+      category: "services",
+      title: `Phone repair kiosk accused of holding one auntie's screen hostage for six business days and a mystery surcharge.`,
+      body:
+        `The auntie in question held court in front of the shop for nearly an hour, delivering a complete economic takedown of repair culture on ${storyPlace(location)}. Spectators described the speech as devastating, inspirational, and too accurate for comfort.`,
+      deck: "Consumer-protection energy peaks near the food court.",
+    },
+    {
+      category: "weather",
+      title: `Rain cloud seen hovering over one specific barbecue like it had unresolved personal beef with joy itself.`,
+      body:
+        "Neighbors swear every other yard remained dry while one family reunion slowly accepted its fate under dripping disrespect. Paper plates warped, uncles cussed, and a tray of macaroni was evacuated with military urgency.",
+      deck: "Meteorological targeting allegations grow louder by the minute.",
+    },
+    {
+      category: "street",
+      title: `Moped with no muffler wakes block at ungodly hour, disappears before anybody can throw a proper threat at it.`,
+      body:
+        "Residents emerged onto porches in bonnets, slides, and righteous fury, but the culprit had already converted noise into legend. One older neighbor promised consequences, though no one is fully sure she can run fast enough to deliver them.",
+      deck: "Street accountability remains difficult when chaos has wheels.",
+    },
+    {
+      category: "store",
+      title: `Dollar store balloon release goes wrong, leaving one metallic '5' floating over traffic like a cursed-ass omen.`,
+      body:
+        "By the time workers noticed, half the block had already assigned spiritual meaning to the situation. Some saw warning, others saw celebration, but everybody agreed the balloon looked smug as hell.",
+      deck: "Party-supply incident quickly upgraded to neighborhood symbolism.",
+    },
+    {
+      category: "services",
+      title: `DMV printer dies mid-appointment, forcing strangers to bond through mutual hatred and chair-based despair.`,
+      body:
+        "Employees begged for patience. Customers countered with loud sighs, hot gossip, and one devastating monologue about government machines always folding under pressure. No resolution was reached, but everyone left spiritually older.",
+      deck: "Administrative suffering continues to unite people across all demographics.",
+    },
+    {
+      category: "street",
+      title: `Somebody's uncle starts giving legal advice outside the check-cashing spot despite never passing anything but judgment.`,
+      body:
+        "Listeners still gathered, partly out of curiosity and partly because he sounded extremely sure of himself. Several claims were made about taxes, warrants, and what counts as 'technically borrowed,' none of which survived light questioning.",
+      deck: "Confidence once again mistaken for certification in broad daylight.",
+    },
   ];
+
+  return shuffled(articles).slice(0, 12);
 }
 
-function renderNews(data) {
-  const articles = fakeArticles(data);
-  state.articles = articles;
+function ensureArticlesForForecast(data) {
+  const locationKey = [data.location.city, data.location.admin1, data.location.country].filter(Boolean).join("|");
+  if (!state.articles.length || state.articleLocationKey !== locationKey) {
+    state.articles = fakeArticles(data);
+    state.articleLocationKey = locationKey;
+  }
+}
+
+function renderNews() {
+  const articles = state.articles;
   elements.newsGrid.innerHTML = "";
   const filtered =
     state.articleCategory === "all"
       ? articles
       : articles.filter((article) => article.category === state.articleCategory);
-  filtered.forEach((article) => {
+  const display = filtered.length ? filtered : articles;
+  display.forEach((article) => {
     const index = articles.indexOf(article);
     const card = document.createElement("article");
     card.className = "news-card";
@@ -575,9 +762,11 @@ function renderNews(data) {
     card.addEventListener("click", () => openReader(index));
     elements.newsGrid.appendChild(card);
   });
+}
 
+function renderTicker(data) {
   const tickerBits = [
-    `${data.location.city} sky still under suspicion and talking wild as hell.`,
+    `${storyPlace(data.location)} sky still under suspicion and talking wild as hell.`,
     `${data.current.title} reported loitering over the neighborhood with a shady-ass look.`,
     `Wind gusts at ${Math.round(data.current.windGusts)} and still talking crazy out the side of they neck.`,
     `Community warns umbrellas to stay ready because outside on bullshit.`,
@@ -749,7 +938,7 @@ function rerollRoast() {
     getRoastLine(state.forecast.current),
     `This forecast look like it borrowed your charger, ate your snacks, and then blamed the weather anyway.`,
     `Outside got the energy of a cousin knocking with no text and too much damn confidence.`,
-    `The sky over ${state.forecast.location.city} look like it came to start mess and borrow gas money.`,
+    `The sky over ${storyPlace(state.forecast.location)} look like it came to start mess and borrow gas money.`,
   ];
   elements.roastLine.textContent = variations[Math.floor(Math.random() * variations.length)];
 }
@@ -760,7 +949,7 @@ function dropAnonymousTip() {
   }
   const tips = [
     `ANONYMOUS TIP: Somebody at the minimart says the forecast got a side chick, a fake chain, and no reliable transportation.`,
-    `ANONYMOUS TIP: Word is the clouds seen outside arguing over who forgot to bring the damn shade to ${state.forecast.location.city}.`,
+    `ANONYMOUS TIP: Word is the clouds seen outside arguing over who forgot to bring the damn shade to ${storyPlace(state.forecast.location)}.`,
     `ANONYMOUS TIP: A barber reported the heat walked in like it owned the block and left smelling like cheap cologne and bad intentions.`,
     `ANONYMOUS TIP: The block believes this weather personally hates errands, hair maintenance, and anybody wearing all white.`,
   ];
@@ -870,7 +1059,7 @@ function renderWeek(daily) {
 function renderForecast(data) {
   state.forecast = data;
   const { location, current, daily, hourly } = data;
-  const placeBits = [location.city, location.admin1, location.country].filter(Boolean).join(", ");
+  const placeBits = displayLocationLabel(location);
 
   elements.locationLabel.textContent = `CHECKIN ${placeBits.toUpperCase()}`;
   elements.currentTemp.textContent = convertTemperature(current.temperature);
@@ -886,8 +1075,8 @@ function renderForecast(data) {
   elements.visibility.textContent = convertVisibility(current.visibility);
   elements.uvIndex.textContent = String(current.uvIndex);
   elements.timezoneLabel.textContent = `${location.timezone} • Sunrise ${formatTime(daily[0].sunrise)} • Sunset ${formatTime(daily[0].sunset)}`;
-  elements.mapLabel.textContent = `Radar says ${location.city} got weather in the vicinity, bullshit on standby, and at least one cloud acting fake as hell.`;
-  elements.hourlyLabel.textContent = `Next 12 hours in ${location.city}: who talkin shit, who drippin, who gettin blown sideways, and who need to sit they ass down.`;
+  elements.mapLabel.textContent = `Radar says ${storyPlace(location)} got weather in the vicinity, bullshit on standby, and at least one cloud acting fake as hell.`;
+  elements.hourlyLabel.textContent = `Next 12 hours on ${storyPlace(location)}: who talkin shit, who drippin, who gettin blown sideways, and who need to sit they ass down.`;
 
   const dispatches = getDispatches(data);
   elements.dispatchRoast.textContent = dispatches.roast;
@@ -895,10 +1084,12 @@ function renderForecast(data) {
   elements.dispatchAdviceMain.textContent = dispatches.advice;
   elements.dispatchExcuse.textContent = dispatches.excuse;
   elements.dispatchExcuseMain.textContent = dispatches.excuse;
-  elements.latePass.textContent = `This certifies that ${location.city} weather was doing entirely too much damn bullshit and may excuse tardiness, stink attitude, delayed errands, or cussing in public.`;
+  elements.latePass.textContent = `This certifies that ${storyPlace(location)} weather was doing entirely too much damn bullshit and may excuse tardiness, stink attitude, delayed errands, or cussing in public.`;
 
+  ensureArticlesForForecast(data);
   renderAnalytics(data);
-  renderNews(data);
+  renderNews();
+  renderTicker(data);
   renderGossip(location);
   renderHotline(location);
   renderBlotter(location);
@@ -929,10 +1120,15 @@ async function loadForecast(query = { city: state.city }) {
       throw new Error(payload.error || "Weather acting funny as hell.");
     }
     renderForecast(payload);
+    state.startupLoaded = true;
     if (payload.location.city) {
-      state.city = payload.location.city;
-      saveRecentCity(payload.location.city);
-      elements.cityInput.value = formatLocationLabel(payload.location);
+      if (hasNamedCity(payload.location)) {
+        state.city = payload.location.city;
+      }
+      if (hasNamedCity(payload.location)) {
+        saveRecentCity(payload.location.city);
+      }
+      elements.cityInput.value = displayLocationLabel(payload.location);
     }
     setStatus("FORECAST LOADED, LIES EXPOSED, BULLSHIT CLOCKED");
   } catch (error) {
@@ -942,19 +1138,37 @@ async function loadForecast(query = { city: state.city }) {
   }
 }
 
-function locateUser() {
+function locateUser({ fallbackToDefault = false } = {}) {
+  state.startupResolved = false;
   if (!navigator.geolocation) {
     setStatus("THIS BROWSER DO NOT KNOW YOUR BLOCK FOR SHIT");
+    if (fallbackToDefault) {
+      state.startupResolved = true;
+      loadForecast({ city: "Langston, Oklahoma" });
+    }
     return;
+  }
+
+  if (fallbackToDefault) {
+    window.setTimeout(() => {
+      if (!state.startupLoaded) {
+        loadForecast({ city: "Langston, Oklahoma" });
+      }
+    }, 1800);
   }
 
   setStatus("TRYNA FIND YOUR CORNER, HOLD THE HELL ON");
   navigator.geolocation.getCurrentPosition(
     ({ coords }) => {
+      state.startupResolved = true;
       loadForecast({ lat: coords.latitude, lon: coords.longitude });
     },
     () => {
       setStatus("LOCATION REQUEST GOT CURVED HARD AS HELL");
+      if (fallbackToDefault) {
+        state.startupResolved = true;
+        loadForecast({ city: "Langston, Oklahoma" });
+      }
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
@@ -962,7 +1176,8 @@ function locateUser() {
 
 elements.searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const city = elements.cityInput.value.trim() || state.city;
+  const rawInput = elements.cityInput.value.trim();
+  const city = rawInput && rawInput !== "Current Location" ? rawInput : state.city;
   const hasVisibleSuggestions = !elements.suggestionsBox.hidden && state.suggestions.length > 0;
   if (hasVisibleSuggestions && state.selectedSuggestionIndex >= 0 && state.suggestions[state.selectedSuggestionIndex]) {
     applySuggestion(state.suggestions[state.selectedSuggestionIndex]);
@@ -1103,7 +1318,7 @@ elements.categoryChips.forEach((button) => {
     state.articleCategory = button.dataset.category;
     setActiveButtons(elements.categoryChips, state.articleCategory, "category");
     if (state.forecast) {
-      renderNews(state.forecast);
+      renderNews();
     }
   });
 });
@@ -1162,4 +1377,4 @@ elements.unitToggle.addEventListener("click", (event) => {
 renderUnitButtons();
 renderRecentCities();
 elements.visitorCounter.textContent = String(80431 + Math.floor(Math.random() * 500));
-loadForecast({ city: state.city });
+locateUser({ fallbackToDefault: true });

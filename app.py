@@ -46,13 +46,16 @@ WEATHER_CODES = {
 }
 
 
-def fetch_json(url: str) -> dict:
+def fetch_json(url: str, extra_headers: dict[str, str] | None = None) -> dict:
+    headers = {
+        "User-Agent": "WeatherStation/1.0",
+        "Accept": "application/json",
+    }
+    if extra_headers:
+        headers.update(extra_headers)
     request = urllib.request.Request(
         url,
-        headers={
-            "User-Agent": "WeatherStation/1.0",
-            "Accept": "application/json",
-        },
+        headers=headers,
     )
     with urllib.request.urlopen(request, timeout=10) as response:
         return json.load(response)
@@ -114,13 +117,7 @@ def search_locations(query: str) -> list[dict]:
     return suggestions
 
 
-def resolve_place(city: str | None = None, latitude: float | None = None, longitude: float | None = None) -> dict:
-    if city:
-        return geocode_city(city)
-
-    if latitude is None or longitude is None:
-        raise LookupError("No forecast target provided.")
-
+def reverse_geocode_open_meteo(latitude: float, longitude: float) -> dict | None:
     params = urllib.parse.urlencode(
         {
             "latitude": latitude,
@@ -131,8 +128,60 @@ def resolve_place(city: str | None = None, latitude: float | None = None, longit
     )
     payload = fetch_json(f"https://geocoding-api.open-meteo.com/v1/reverse?{params}")
     results = payload.get("results") or []
-    if results:
-        return results[0]
+    return results[0] if results else None
+
+
+def reverse_geocode_nominatim(latitude: float, longitude: float) -> dict | None:
+    params = urllib.parse.urlencode(
+        {
+            "lat": latitude,
+            "lon": longitude,
+            "format": "jsonv2",
+            "zoom": 14,
+            "addressdetails": 1,
+        }
+    )
+    payload = fetch_json(
+        f"https://nominatim.openstreetmap.org/reverse?{params}",
+        extra_headers={"Accept-Language": "en-US,en;q=0.9"},
+    )
+    address = payload.get("address") or {}
+    city = (
+        address.get("city")
+        or address.get("town")
+        or address.get("village")
+        or address.get("hamlet")
+        or address.get("municipality")
+        or address.get("suburb")
+        or address.get("city_district")
+        or address.get("county")
+    )
+    if not city:
+        return None
+    return {
+        "name": city,
+        "admin1": address.get("state"),
+        "country": address.get("country"),
+        "latitude": latitude,
+        "longitude": longitude,
+    }
+
+
+def resolve_place(city: str | None = None, latitude: float | None = None, longitude: float | None = None) -> dict:
+    if city:
+        return geocode_city(city)
+
+    if latitude is None or longitude is None:
+        raise LookupError("No forecast target provided.")
+
+    for resolver in (reverse_geocode_open_meteo, reverse_geocode_nominatim):
+        try:
+            place = resolver(latitude, longitude)
+            if place:
+                return place
+        except (urllib.error.URLError, TimeoutError):
+            continue
+
     return {
         "name": "Current Location",
         "admin1": None,
