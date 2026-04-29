@@ -126,6 +126,27 @@ h1 {
   border: 3px inset #ffffff;
 }
 
+.nav-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nav-tab,
+.category-chip {
+  width: auto;
+  border: 3px outset #fff;
+  background: #fff2a4;
+  font-size: 0.76rem;
+}
+
+.nav-tab.active,
+.category-chip.active {
+  background: #0014a7;
+  color: #fff;
+}
+
 .marquee-strip {
   margin-bottom: 10px;
   background: #00e1ff;
@@ -140,6 +161,54 @@ h1 {
   margin: 10px 0;
   background: #d7cbff;
   padding: 10px;
+}
+
+.crime-strip {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.crime-banner,
+.booze-banner {
+  border: 4px ridge #d7d7d7;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+  padding: 12px;
+}
+
+.crime-banner {
+  background: linear-gradient(135deg, #2a0000, #7d0606 55%, #e43700);
+  color: #fff6d0;
+}
+
+.booze-banner {
+  background: linear-gradient(135deg, #201100, #6d3a00 60%, #ff9e00);
+  color: #fff6d0;
+}
+
+.crime-kicker {
+  display: inline-block;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  background: #fff26a;
+  color: #2b0000;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+}
+
+.crime-banner strong,
+.booze-banner strong {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.crime-banner p,
+.booze-banner p {
+  margin: 8px 0 0;
+  line-height: 1.55;
 }
 
 .search-box {
@@ -348,6 +417,14 @@ button {
   margin-top: 12px;
 }
 
+.category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 12px;
+  margin: 8px 0 0;
+}
+
 .recent-city {
   padding: 7px 10px;
   border: 2px outset #fff;
@@ -400,6 +477,7 @@ hr {
 .petty-grid,
 .news-grid,
 .dispatch-grid,
+.blotter-grid,
 .hourly-strip,
 .week-grid {
   padding: 12px;
@@ -466,6 +544,7 @@ hr {
 
 .news-card,
 .dispatch-card,
+.blotter-card,
 .hour-card,
 .week-card {
   border: 3px outset #fff;
@@ -480,6 +559,23 @@ hr {
 .news-card:hover {
   background: #fff6c7;
   transform: translate(-2px, -2px);
+}
+
+.blotter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.blotter-card {
+  cursor: pointer;
+  border-style: dashed;
+  background: #fff2dd;
+  line-height: 1.6;
+}
+
+.blotter-card:hover {
+  background: #ffe0b1;
 }
 
 .news-card h3 {
@@ -503,6 +599,101 @@ hr {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
+}
+
+.gossip-controls,
+.alerts-controls,
+.scanner-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.gossip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+.gossip-card {
+  border: 3px dashed #fff;
+  background: #fff9d8;
+  padding: 12px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.gossip-card:hover {
+  background: #fff0ac;
+}
+
+.alerts-layout {
+  padding: 12px;
+}
+
+.poll-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.poll-option {
+  text-align: left;
+  background: linear-gradient(180deg, #ffe66c, #ff8e00);
+}
+
+.poll-option.active {
+  background: linear-gradient(180deg, #0017c7, #4700cc);
+  color: #fff;
+}
+
+.poll-result {
+  margin: 0 12px 12px;
+  border: 3px inset #fff;
+  background: #fffef0;
+  padding: 12px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.alert-screen {
+  min-height: 90px;
+  border: 4px inset #fff;
+  background: #14002f;
+  color: #57ff76;
+  font-family: "Courier New", Courier, monospace;
+  padding: 14px;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.panic-mode .alert-screen,
+.alert-screen.alarm {
+  background: #410000;
+  color: #fff26a;
+}
+
+.scanner-screen {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.scanner-item {
+  text-align: left;
+  border: 3px inset #fff;
+  background: #120029;
+  color: #4dff7b;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.5;
+}
+
+.scanner-item:hover {
+  background: #28004e;
 }
 
 .map-placeholder {
@@ -701,14 +892,97 @@ hr {
   margin: 0 0 14px;
 }
 
+.hotline-list,
+.reporter-list,
+.suspect-list {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.hotline-item,
+.reporter-card,
+.suspect-card {
+  text-align: left;
+}
+
+.reporter-card span,
+.suspect-card span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.suspect-card {
+  background: linear-gradient(180deg, #fff7ab, #ffbf47);
+}
+
+.popup-ad {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 25;
+}
+
+.popup-shell {
+  width: min(320px, calc(100vw - 24px));
+  background: #fff4c9;
+  border: 4px ridge #d7d7d7;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35);
+}
+
+.popup-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: #0014a7;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.popup-top button {
+  width: auto;
+  min-width: 42px;
+}
+
+.popup-body {
+  padding: 12px;
+}
+
+.popup-body h3 {
+  margin: 0 0 10px;
+  color: #a30000;
+}
+
+.popup-body p {
+  line-height: 1.6;
+}
+
+.panic-mode {
+  animation: panicflash 240ms steps(1) 8;
+}
+
+@keyframes panicflash {
+  50% {
+    background: #3a0000;
+  }
+}
+
 @media (max-width: 1100px) {
   .content-grid,
   .top-grid,
+  .crime-strip,
   .logo-wrap,
   .utility-bar,
   .hero-split,
   .news-grid,
   .dispatch-grid,
+  .blotter-grid,
+  .gossip-grid,
   .week-grid,
   .hourly-strip {
     grid-template-columns: 1fr 1fr;
@@ -726,12 +1000,15 @@ hr {
 
   .content-grid,
   .top-grid,
+  .crime-strip,
   .logo-wrap,
   .utility-bar,
   .hero-split,
   .search-box,
   .news-grid,
   .dispatch-grid,
+  .blotter-grid,
+  .gossip-grid,
   .week-grid,
   .hourly-strip,
   .petty-grid {
@@ -743,6 +1020,8 @@ hr {
   }
 
   .utility-buttons,
+  .gossip-controls,
+  .alerts-controls,
   .map-header,
   .score-row {
     flex-direction: column;

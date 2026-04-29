@@ -12,7 +12,7 @@
       <header class="masthead">
         <div class="logo-wrap">
           <div class="logo-box">
-            <span class="logo-top">WWW.GANGSTAFORECAST.COM</span>
+            <span class="logo-top">WWW.GANGSTACAST.COM</span>
             <h1>GANGSTACAST 2001</h1>
             <p class="tagline">Weather, rumors, lies, local drama, and neighborhood conditions.</p>
           </div>
@@ -33,6 +33,13 @@
             everybody on the block files complaints against the atmosphere in real time.
           </marquee>
         </div>
+        <nav class="nav-strip">
+          <button class="nav-tab active" data-tab="news" type="button">CHANNEL 8 LIES</button>
+          <button class="nav-tab" data-tab="gossip" type="button">STREET GOSSIP</button>
+          <button class="nav-tab" data-tab="alerts" type="button">EMERGENCY FOOLISHNESS</button>
+          <button class="nav-tab" data-tab="scanner" type="button">BLOCK SCANNER</button>
+          <button class="nav-tab" data-tab="ads" type="button">SHAMELESS ADS</button>
+        </nav>
       </header>
 
       <section class="utility-bar">
@@ -45,11 +52,26 @@
         <div class="utility-buttons">
           <button id="locateButton" type="button">FIND MY CORNER</button>
           <button id="shakeButton" type="button">SHAKE THE BLOCK</button>
+          <button id="panicButton" type="button">PANIC MODE</button>
+          <button id="tipButton" type="button">DROP A DAMN TIP</button>
           <div class="unit-switch" id="unitToggle">
             <button class="unit-button active" type="button" data-unit="imperial">F</button>
             <button class="unit-button" type="button" data-unit="metric">C</button>
           </div>
         </div>
+      </section>
+
+      <section class="crime-strip">
+        <article class="crime-banner">
+          <span class="crime-kicker">BLOCK FILES</span>
+          <strong>CRIME, WEATHER, BOOZE, GOSSIP, PETTY VIOLENCE AGAINST UMBRELLAS</strong>
+          <p>Where the forecast catches a case, the liquor store catches a rush, and every busted plan gets blamed on outside.</p>
+        </article>
+        <article class="booze-banner">
+          <span class="crime-kicker">TONIGHT'S RUN</span>
+          <strong id="boozeRunLabel">Corner-store beverage operations still under review.</strong>
+          <button id="boozeButton" type="button">REROLL THE BOOZE REPORT</button>
+        </article>
       </section>
 
       <section class="top-grid">
@@ -81,6 +103,7 @@
           <div class="button-stack">
             <button id="excuseButton" type="button">PRINT NEW EXCUSE</button>
             <button id="roastButton" type="button">ROAST THIS DAMN SKY AGAIN</button>
+            <button id="hotlineButton" type="button">CALL THE HOTLINE</button>
           </div>
         </article>
       </section>
@@ -142,6 +165,13 @@
           <article class="box news-box">
             <div class="box-title">FAKE NEWS THEY DEFINITELY SAID ON SOME BULLSH*T CHANNEL 8</div>
             <p class="subhead news-tip">CLICK ANY HEADLINE TO READ THE FULL MESS</p>
+            <div class="category-row">
+              <button class="category-chip active" data-category="all" type="button">ALL MESS</button>
+              <button class="category-chip" data-category="weather" type="button">WEATHER BS</button>
+              <button class="category-chip" data-category="store" type="button">STORE DRAMA</button>
+              <button class="category-chip" data-category="street" type="button">STREET FOOLISHNESS</button>
+              <button class="category-chip" data-category="services" type="button">CITY FAILURES</button>
+            </div>
             <div class="news-grid" id="newsGrid">
               <article class="news-card">
                 <h3>Corner store owner says ice machine "gave up like a bitch" right before the heat wave.</h3>
@@ -176,6 +206,59 @@
             </div>
           </article>
 
+          <article class="box gossip-box">
+            <div class="box-title">STREET GOSSIP SUBMISSION CENTER</div>
+            <p class="subhead">CLICK A HOT RUMOR OR MAKE THE BLOCK TALK MORE</p>
+            <div class="gossip-controls">
+              <button id="gossipSeedButton" type="button">DROP NEW GOSSIP</button>
+              <button id="gossipClearButton" type="button">WIPE THE MESS</button>
+            </div>
+            <div class="gossip-grid" id="gossipGrid">
+              <article class="gossip-card">Somebody at the smoke shop said the clouds got an ankle monitor and a loud mouth.</article>
+              <article class="gossip-card">Word is the bus stop bench leaning because it tired of hearing everybody complain.</article>
+              <article class="gossip-card">Auntie on 3rd says the heat and her wig got active beef again.</article>
+            </div>
+          </article>
+
+          <article class="box alerts-box">
+            <div class="box-title">EMERGENCY FOOLISHNESS BULLETINS</div>
+            <div class="alerts-layout">
+              <div class="alert-screen" id="alertScreen">NO MAJOR BULLSHIT YET. STAY LOOSE.</div>
+              <div class="alerts-controls">
+                <button id="alertButton" type="button">REROLL ALERT</button>
+                <button id="sirenButton" type="button">HIT THE SIREN</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="box poll-box">
+            <div class="box-title">BLOCK POLL: WHAT KIND OF BULLSHIT IS THIS REALLY?</div>
+            <p class="subhead">CLICK A THEORY AND WATCH THE NEIGHBORHOOD OVERREACT</p>
+            <div class="poll-grid" id="pollGrid">
+              <button class="poll-option" data-poll="weather" type="button">THIS SOME WEATHER SHIT</button>
+              <button class="poll-option" data-poll="government" type="button">THIS THE CITY'S FAULT</button>
+              <button class="poll-option" data-poll="haters" type="button">HATERS DID THIS</button>
+              <button class="poll-option" data-poll="mercury" type="button">MERCURY ON BULLSHIT AGAIN</button>
+            </div>
+            <div class="poll-result" id="pollResult">Neighborhood votes still loading, cussing, and accusing.</div>
+          </article>
+
+          <article class="box scanner-box">
+            <div class="box-title">BLOCK SCANNER AND INCIDENT DESK</div>
+            <p class="subhead">LIVE CALLS, STORE DRAMA, PARKING LOT REPORTS, AND GENERAL FUCKERY</p>
+            <div class="scanner-screen" id="scannerScreen"></div>
+            <div class="scanner-controls">
+              <button id="scannerButton" type="button">PULL NEW INCIDENT</button>
+              <button id="scannerChaosButton" type="button">MAXIMUM NONSENSE</button>
+            </div>
+          </article>
+
+          <article class="box blotter-box">
+            <div class="box-title">BLOCK CRIME BLOTTER</div>
+            <p class="subhead">PETTY CRIMES, LIQUOR-ADJACENT DISASTERS, AND WEATHER-ENHANCED BAD DECISIONS</p>
+            <div class="blotter-grid" id="blotterGrid"></div>
+          </article>
+
           <article class="box radar-box">
             <div class="box-title">HOOD SKY MAP AND OTHER NOSY-ASS BUSINESS</div>
             <div class="map-placeholder">
@@ -202,6 +285,33 @@
             <div class="box-title">SEVEN-DAY NONSENSE CALENDAR FROM HELL</div>
             <div class="week-grid" id="forecastGrid"></div>
           </article>
+
+          <article class="box hotline-box">
+            <div class="box-title">VOICEMAILS FROM THE BLOCK</div>
+            <div class="hotline-list" id="hotlineList">
+              <button class="hotline-item" type="button">PLAY: "WHY THE SUN OUT HERE FLEXIN?"</button>
+              <button class="hotline-item" type="button">PLAY: "WHO TOLD THE WIND IT COULD TOUCH ME?"</button>
+              <button class="hotline-item" type="button">PLAY: "I'M CALLIN ABOUT THIS STICKY-ASS HUMIDITY."</button>
+            </div>
+          </article>
+
+          <article class="box booze-box">
+            <div class="box-title">LIQUOR STORE SURVIVAL BOARD</div>
+            <div class="dispatch-grid">
+              <div class="dispatch-card">
+                <div class="mini-title">RUN OF THE NIGHT</div>
+                <p id="boozePlan">Checking which beverages got the block acting reckless.</p>
+              </div>
+              <div class="dispatch-card">
+                <div class="mini-title">LINE STATUS</div>
+                <p id="lineStatus">Cashier still sizing up fake IDs, side-eyes, and exact-change optimism.</p>
+              </div>
+              <div class="dispatch-card">
+                <div class="mini-title">RISK LEVEL</div>
+                <p id="riskLevel">Current risk assessment says somebody definitely parking wrong.</p>
+              </div>
+            </div>
+          </article>
         </section>
 
         <aside class="right-rail">
@@ -227,10 +337,50 @@
           </article>
 
           <article class="box rail-box">
+            <div class="box-title">NIGHT SHIFT RULES</div>
+            <ul class="retro-list">
+              <li>No walking into the liquor store line with scratch-offs, impatience, and no damn plan.</li>
+              <li>If the clouds look criminal, grab your bottle, your snacks, and get your ass home.</li>
+              <li>Do not debate sports, weather, and child support near the beer fridge after 10 PM.</li>
+              <li>If somebody say "watch my car real quick," the answer is hell no.</li>
+            </ul>
+          </article>
+
+          <article class="box rail-box">
             <div class="box-title">LATE PASS OFFICE AND EXCUSE WAREHOUSE</div>
             <p class="late-pass" id="latePass">
               This certifies that weather-related foolishness may have interfered with your punctuality.
             </p>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">REPORTERS WHO NEED A RAISE</div>
+            <div class="reporter-list">
+              <button class="reporter-card" data-reporter="big-shirl" type="button">BIG SHIRL<br /><span>Storms, lies, and parking lot commentary</span></button>
+              <button class="reporter-card" data-reporter="lil-ree" type="button">LIL REE<br /><span>Corner store failures and heatwave slander</span></button>
+              <button class="reporter-card" data-reporter="unc-darnell" type="button">UNC DARNELL<br /><span>Porch radar and unnecessary opinions</span></button>
+            </div>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">WEATHER SUSPECT LINEUP</div>
+            <div class="suspect-list" id="suspectList">
+              <button class="suspect-card" data-suspect="sun" type="button">THE SUN<br /><span>Too damn bright and cocky</span></button>
+              <button class="suspect-card" data-suspect="wind" type="button">THE WIND<br /><span>Hands rated E for everybody</span></button>
+              <button class="suspect-card" data-suspect="rain" type="button">THE RAIN<br /><span>Known shoe saboteur</span></button>
+              <button class="suspect-card" data-suspect="clouds" type="button">THE CLOUDS<br /><span>Shady, loud, and uncooperative</span></button>
+            </div>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">HOOD TV GUIDE</div>
+            <ul class="retro-list interactive-list" id="tvGuide">
+              <li>5:00 PM: Auntie Stormwatch and the Case of the Stolen Lawn Chair</li>
+              <li>5:30 PM: EBT Reader Crimes Unit</li>
+              <li>6:00 PM: Niggas in the Parking Lot Yelling at the Sky</li>
+              <li>6:30 PM: Fish Spot Shortages: Lemon Pepper Gone Again</li>
+              <li>7:00 PM: Live on the Porch with UNC DARNELL</li>
+            </ul>
           </article>
         </aside>
       </section>
@@ -265,6 +415,20 @@
         <p class="reader-dek" id="readerDek">Stand by while the newsroom lies with confidence.</p>
         <div class="reader-body" id="readerBody"></div>
       </article>
+    </div>
+
+    <div class="popup-ad" id="popupAd" hidden>
+      <div class="popup-shell">
+        <div class="popup-top">
+          <span>LOCAL INTERNET SPECIAL</span>
+          <button id="popupClose" type="button">X</button>
+        </div>
+        <div class="popup-body">
+          <h3 id="popupTitle">HOT DEAL LOADING...</h3>
+          <p id="popupCopy">Please hold while capitalism acts stupid.</p>
+          <button id="popupShuffle" type="button">GIMME ANOTHER JANKY AD</button>
+        </div>
+      </div>
     </div>
 
     <script src="/app.js" defer></script>

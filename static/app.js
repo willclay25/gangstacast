@@ -9,6 +9,7 @@ const state = {
   suggestionRequestId: 0,
   suggestionQuery: "",
   articles: [],
+  articleCategory: "all",
 };
 
 const elements = {
@@ -17,6 +18,8 @@ const elements = {
   suggestionsBox: document.querySelector("#suggestionsBox"),
   locateButton: document.querySelector("#locateButton"),
   unitToggle: document.querySelector("#unitToggle"),
+  navTabs: document.querySelectorAll(".nav-tab"),
+  categoryChips: document.querySelectorAll(".category-chip"),
   statusPill: document.querySelector("#statusPill"),
   locationLabel: document.querySelector("#locationLabel"),
   currentTemp: document.querySelector("#currentTemp"),
@@ -58,9 +61,33 @@ const elements = {
   hourlyStrip: document.querySelector("#hourlyStrip"),
   recentCities: document.querySelector("#recentCities"),
   visitorCounter: document.querySelector("#visitorCounter"),
+  boozeRunLabel: document.querySelector("#boozeRunLabel"),
+  boozeButton: document.querySelector("#boozeButton"),
   shakeButton: document.querySelector("#shakeButton"),
+  panicButton: document.querySelector("#panicButton"),
+  tipButton: document.querySelector("#tipButton"),
   excuseButton: document.querySelector("#excuseButton"),
   roastButton: document.querySelector("#roastButton"),
+  hotlineButton: document.querySelector("#hotlineButton"),
+  gossipSeedButton: document.querySelector("#gossipSeedButton"),
+  gossipClearButton: document.querySelector("#gossipClearButton"),
+  gossipGrid: document.querySelector("#gossipGrid"),
+  alertButton: document.querySelector("#alertButton"),
+  sirenButton: document.querySelector("#sirenButton"),
+  alertScreen: document.querySelector("#alertScreen"),
+  pollGrid: document.querySelector("#pollGrid"),
+  pollResult: document.querySelector("#pollResult"),
+  scannerScreen: document.querySelector("#scannerScreen"),
+  scannerButton: document.querySelector("#scannerButton"),
+  scannerChaosButton: document.querySelector("#scannerChaosButton"),
+  blotterGrid: document.querySelector("#blotterGrid"),
+  hotlineList: document.querySelector("#hotlineList"),
+  boozePlan: document.querySelector("#boozePlan"),
+  lineStatus: document.querySelector("#lineStatus"),
+  riskLevel: document.querySelector("#riskLevel"),
+  reporterCards: document.querySelectorAll(".reporter-card"),
+  suspectList: document.querySelector("#suspectList"),
+  tvGuide: document.querySelector("#tvGuide"),
   communityBoard: document.querySelector("#communityBoard"),
   readerModal: document.querySelector("#readerModal"),
   readerBackdrop: document.querySelector("#readerBackdrop"),
@@ -68,6 +95,11 @@ const elements = {
   readerTitle: document.querySelector("#readerTitle"),
   readerDek: document.querySelector("#readerDek"),
   readerBody: document.querySelector("#readerBody"),
+  popupAd: document.querySelector("#popupAd"),
+  popupClose: document.querySelector("#popupClose"),
+  popupShuffle: document.querySelector("#popupShuffle"),
+  popupTitle: document.querySelector("#popupTitle"),
+  popupCopy: document.querySelector("#popupCopy"),
   forecastTemplate: document.querySelector("#forecastCardTemplate"),
   hourTemplate: document.querySelector("#hourCardTemplate"),
 };
@@ -150,6 +182,12 @@ function renderUnitButtons() {
 
 function formatLocationLabel(location) {
   return [location.city, location.admin1, location.country].filter(Boolean).join(", ");
+}
+
+function setActiveButtons(buttons, value, key = "tab") {
+  buttons.forEach((button) => {
+    button.classList.toggle("active", button.dataset[key] === value || button.dataset.category === value);
+  });
 }
 
 function hideSuggestions() {
@@ -295,71 +333,224 @@ function getNeighborhoodBulletins(location) {
   ];
 }
 
+function getBoozeRuns(location) {
+  return [
+    {
+      banner: `${location.city} night crews reportedly targeting cognac, pineapple soda, and one suspiciously warm bag of ice.`,
+      plan: "Primary move: grab drinks before the crowd gets loud and one dude starts explaining his mixtape.",
+      line: "Line moving slow because somebody buying minis, loose chips, and arguing about lottery science.",
+      risk: "Moderate hood risk. High chance of double parking, cigarette borrowing, and one dumb-ass debate in the doorway.",
+    },
+    {
+      banner: `Beer fridge in ${location.city} currently under pressure from after-work survivors, porch philosophers, and people dodging the damn rain.`,
+      plan: "Recommended run: tall cans, blunt wraps, anti-social snacks, and a fast exit before the weather switch up.",
+      line: "Cashier line unstable. Somebody counting crumpled bills like a hostage negotiator.",
+      risk: "Elevated nonsense. Wind, booze, and side-eyes may combine into a parking-lot misunderstanding.",
+    },
+    {
+      banner: `Late-night bottle mission in ${location.city} expected to be complicated by fake weather confidence and one busted card reader.`,
+      plan: "Best route: hit the nearest store, ignore all opinions by the front door, and keep receipts like legal evidence.",
+      line: "Current line status says two regulars talking too much and one cousin buying exactly one stale-ass honey bun.",
+      risk: "High petty-crime energy. Somebody definitely trying to sell cologne, headphones, or an unlocked phone by the entrance.",
+    },
+  ];
+}
+
+function getCrimeBlotter(location) {
+  return [
+    `Open container of gossip spilled across ${location.city} after one auntie spotted her ex buying storm chips and cheap rum before sunset.`,
+    `Umbrella assault reported near the bus stop. Witnesses say the wind swung first and the umbrella folded like a snitch.`,
+    `Parking-lot diplomacy failed outside the liquor store when two Buicks tried to claim the same crooked-ass space at once.`,
+    `Suspicious weather loitering observed over the block. Clouds seen circling with criminal intent and zero explanation.`,
+    `Petty theft report: somebody walked off with three lighters, one sports drink, and a confidence level that felt federally illegal.`,
+    `Noise complaint filed against thunder, porch dice, and one cousin laughing way too damn hard at 1:12 AM.`,
+  ];
+}
+
+function getScannerIncidents(location) {
+  return [
+    `SCANNER 1: ${location.city} corner store reports grape soda shelf wiped the fuck out by 2:14 PM. One cashier described the crowd as "thirsty, dramatic, and slightly feral."`,
+    `SCANNER 2: Watermelon stack at the market collapsed after one uncle squeezed every damn melon like he was solving crimes with his fingertips.`,
+    `SCANNER 3: EBT reader at the discount mart went down again. Line immediately transformed into a TED Talk about struggle, wires, and weak-ass management.`,
+    `SCANNER 4: Beauty supply parking lot experiencing a hostile merge situation and two separate acts of horn-based disrespect.`,
+    `SCANNER 5: Somebody on ${location.city}'s east side reported a busted hydrant, three wet kids, and one auntie cussing the city with biblical confidence.`,
+    `SCANNER 6: Chicken spot says fryer oil acting suspicious, drink machine dripping lies, and customers still ordering like rent not due.`,
+    `SCANNER 7: Bus stop bench leaning like it heard all the gossip and want no more part of this raggedy-ass block.`,
+    `SCANNER 8: Local porch committee confirms the weather got a slick mouth, fake smile, and too much damn free time.`,
+  ];
+}
+
+function getPollResponse(key, location) {
+  const responses = {
+    weather: `Poll closed: 41% say this is plain weather bullshit, 33% say the sky woke up angry, and 26% say somebody need to cuss out a meteorologist in ${location.city}.`,
+    government: `Poll closed: 58% blame the city, 22% blame weak infrastructure, and the rest blame one lazy official who definitely "knew this shit was coming."`,
+    haters: `Poll closed: 63% say haters hexed the block, 19% say an ex did candle work, and 18% say the vibes simply broke as hell this week.`,
+    mercury: `Poll closed: 77% say Mercury is back on dickhead timing, while three aunties insist planets need ass-whippings too.`,
+  };
+  return responses[key] || "The poll machine jammed because the neighborhood answers came in too loud.";
+}
+
+function getSuspectFile(suspect, location) {
+  const files = {
+    sun: {
+      title: "PRIMARY SUSPECT: THE SUN",
+      deck: "Charged with overheating sidewalks, bleaching car paint, and flexing too hard on innocent foreheads.",
+      body: `Detectives in ${location.city} say the sun has been seen hanging high, talking greasy, and making everybody's car seat feel like attempted murder. Witnesses report excessive shining, aggressive glare, and repeated acts of sweaty-ass intimidation.`,
+    },
+    wind: {
+      title: "PRIMARY SUSPECT: THE WIND",
+      deck: "Wanted for slapping signs, flipping cheap umbrellas, and violating personal space blockwide.",
+      body: `Residents allege the wind keeps running up on paper plates, front lace, loose receipts, and anybody carrying something important with both hands full. The suspect remains invisible, raggedy, and weirdly bold.`,
+    },
+    rain: {
+      title: "PRIMARY SUSPECT: THE RAIN",
+      deck: "Known to target clean sneakers, fresh errands, and people who just said 'it don't look too bad outside.'",
+      body: `Investigators say the rain often waits until folks leave the house to start its shady-ass performance. Charges include sock sabotage, puddle fraud, and emotional damage to one decent hoodie in ${location.city}.`,
+    },
+    clouds: {
+      title: "PRIMARY SUSPECT: THE CLOUDS",
+      deck: "Charged with loitering over the neighborhood and acting moody with no explanation whatsoever.",
+      body: `Block witnesses say these clouds have been moving in packs, looking dark, and giving off fake-calm energy before every fresh piece of nonsense. Their lawyer released no statement and one weak-ass shrug.`,
+    },
+  };
+  return files[suspect] || files.clouds;
+}
+
+function getPopupAds(location) {
+  return [
+    {
+      title: "BOOTLEG METEOROLOGY CLASSES",
+      copy: `Learn how to point at a cloud, cuss at it, and call yourself chief weather officer of ${location.city}. Limited folding chairs available.`,
+    },
+    {
+      title: "UNC DARNELL'S PORCH RADAR",
+      copy: "Now offering same-day storm predictions, fish plate reviews, and half-reliable parking advice for two dollars and a nod.",
+    },
+    {
+      title: "DISRESPECTFUL UMBRELLAS WHOLESALE",
+      copy: "Buy 2 umbrellas, get 1 argument with the wind free. Not valid during sideways rain or personal growth.",
+    },
+    {
+      title: "HOTLINE SPONSOR ALERT",
+      copy: "This weather warning brought to you by the corner store fan section and whoever still selling DVDs from a duffel bag.",
+    },
+  ];
+}
+
+function getAlertMessages(location) {
+  return [
+    `CITYWIDE ALERT: ${location.city.toUpperCase()} CURRENTLY EXPERIENCING HIGH LEVELS OF OUTSIDE BULLSHIT.`,
+    `BLOCK ADVISORY: DO NOT LET THIS NICE-LOOKING SKY FOOL YOUR DUMB ASS.`,
+    `STREET WARNING: WIND, HEAT, OR RAIN MAY TRY TO HUMBLE YOU IN PUBLIC TODAY.`,
+    `EMERGENCY BULLETIN: SOMEBODY UNCLE ALREADY BLAMED THE FORECAST FOR EVERYTHING SINCE 1998.`,
+    `PUBLIC SAFETY NOTE: IF THE CLOUDS LOOK PETTY, TAKE YOUR BUSINESS ELSEWHERE.`,
+  ];
+}
+
+function getGossipSeeds(location) {
+  return [
+    `Word on the block is ${location.city} got one cloud that be circling like it owe everybody money.`,
+    "Somebody near the liquor store swears the heat only pull up when they just got their hair done.",
+    "A woman by the bus stop said the weather app lied and now she beefing with technology itself.",
+    "Two cousins are arguing whether the wind hate braids specifically or just joy in general.",
+    "Local rumor says the sky been acting dramatic because Mercury somewhere minding nobody's business.",
+  ];
+}
+
+function getHotlineMessages(location) {
+  return [
+    `HOTLINE MESSAGE: "Why the hell is ${location.city} sunny and shady at the same damn time?"`,
+    'HOTLINE MESSAGE: "If this wind touch my plate again, I am writing my congressman."',
+    'HOTLINE MESSAGE: "Tell the humidity to square up or calm down, pick one."',
+    'HOTLINE MESSAGE: "I knew them clouds was fake when they smiled too hard this morning."',
+  ];
+}
+
+function getReporterTake(reporter, location) {
+  const takes = {
+    "big-shirl": `BIG SHIRL reporting live from ${location.city}: "The sky got too much mouth and not enough accountability. Back to you, player."`,
+    "lil-ree": `LIL REE here: "I checked three corner stores and two aunties. Consensus says the weather acting foul and the snacks are overpriced."`,
+    "unc-darnell": `UNC DARNELL on the porch: "I seen worse in '86, but this bullshit still unnecessary. Y'all be safe and stop trusting pretty clouds."`,
+  };
+  return takes[reporter] || "Reporter unavailable due to outside foolishness.";
+}
+
 function fakeArticles(data) {
   const { location, current, daily } = data;
   const firstDay = daily[0];
   return [
     {
+      category: "weather",
       title: `${location.city} resident accuses ${firstDay.label.toLowerCase()} of "doing too damn much before noon" and demands a public apology.`,
       body:
         "Witnesses report the atmosphere came in loud, overdressed, half-cocked, and unwilling to explain a single damn thing. One woman near the donut shop said the whole sky looked like it had been rehearsing fake behavior since sunrise. Neighborhood analysts agreed that the weather had entered the day with entirely too much confidence for something acting that suspicious.",
       deck: "Residents say the atmosphere showed up with a slick mouth and no accountability.",
     },
     {
+      category: "weather",
       title: `City council denies rumors that wind gusts are targeting cookout tents, paper plates, and old men in lawn chairs on purpose.`,
       body:
         `Officials say the ${Math.round(current.windGusts)} mph gusts are random, but porch witnesses say that is some lying-ass nonsense. Multiple family members claim the wind waited until the ribs hit the grill before getting disrespectful. One folding table has already been described as "emotionally unavailable" after a close call near the potato salad.`,
       deck: "Porch witnesses refuse to believe this much chaos could be accidental.",
     },
     {
+      category: "weather",
       title: `Neighborhood relieved after sun clocked in for part-time duty despite ${current.cloudCover}% cloud cover and a lazy-ass attitude.`,
       body:
         "Experts say the brightness lasted long enough for one selfie, two bad decisions, and a completely unnecessary argument in sandals. Community members remain split on whether the sun was truly helping or just trying to show off after ducking responsibility all morning. A man outside the liquor store called it 'performative brightness' and then refused further comment.",
       deck: "Civic leaders say the sunshine contribution was small, flashy, and suspiciously timed.",
     },
     {
+      category: "weather",
       title: `Local pressure pack reaches ${current.pressure} hPa, community asked to act normal anyway and immediately says "hell no."`,
       body:
         "Residents responded by minding some business, exaggerating the rest, and blaming the sky for every dumb choice since breakfast. Sources close to the smoke shop say customers were already on edge before the pressure report landed. Once word spread, three separate people blamed the atmosphere for old arguments, bad parking, and a busted toenail from 2024.",
       deck: "Pressure numbers drop and suddenly everybody got weather-related trauma.",
     },
     {
+      category: "street",
       title: `Breaking: cousin fights invisible humidity, loses, cusses out porch furniture and a box fan.`,
       body:
         "Family members say the battle started peacefully until the sticky air got slick and turned the whole block into a sweaty-ass grievance hearing. A witness from across the street claims the first insult was directed at the air itself, followed by an extended rant at an innocent plastic chair. Mediation efforts failed once the box fan started wobbling like it had an opinion.",
       deck: "Humidity once again defeats common sense in a one-sided summer dispute.",
     },
     {
+      category: "street",
       title: `Neighborhood dog refuses to pee in drizzle, stares at owner like "you take your dumb ass out there."`,
       body:
         "Animal analysts say the canine made a valid point and had better weather instincts than most grown people. The owner allegedly tried to motivate the dog with claps, encouragement, and one deeply embarrassing baby voice. None of it worked. Onlookers say the dog delivered a stare so judgmental it should count as a weather advisory by itself.",
       deck: "Experts rank the dog's side-eye among the strongest forecast signals of the week.",
     },
     {
+      category: "store",
       title: `Corner store ice machine quits without notice, city enters crunchy beverage emergency.`,
       body:
         "Store employees confirmed the machine made one sad noise, leaked in a circle, and died like it was tired of everybody's shit. Customers arriving for cold drinks found only warm disappointment and one handwritten sign with no punctuation. A neighborhood spokesman described the scene as 'emotionally ragged' and requested immediate intervention before folks started buying room-temperature orange soda out of desperation.",
       deck: "Cold drink infrastructure collapses at the exact moment people need it most.",
     },
     {
+      category: "services",
       title: `EBT reader down at neighborhood market, line now powered entirely by cussing and side-eyes.`,
       body:
         "Witnesses say one cashier whispered 'not again' and three customers immediately started calling cousins for backup cash. The line reportedly shifted from mild frustration to full theatrical performance within two minutes. One auntie was seen giving a speech about modern systems, weak management, and the spiritual collapse of customer service while still holding frozen fries.",
       deck: "Register drama escalates faster than expected under fluorescent lighting.",
     },
     {
+      category: "services",
       title: `Barbershop says power flicker ruined two lineups and one man's whole damn weekend.`,
       body:
         "Officials at the scene described the mood as 'tense, betrayed, and ready to fight the electric company.' Sources inside the shop say the clippers cut out at a historic level of inconvenience. By the time the lights came back, one customer was demanding accountability, one barber was pacing in disbelief, and everybody else was acting like the grid had committed a personal offense.",
       deck: "Investigators say the timing was so bad it felt intentional.",
     },
     {
+      category: "store",
       title: `Fish spot runs out of lemon pepper during weather confusion, community considers filing federal complaint.`,
       body:
         "Multiple residents confirmed this was the final insult in a week already full of heat, delays, and disrespect. People in line described the shortage as spiritually destabilizing and economically suspicious. One man claimed the weather distracted the kitchen, the manager blamed delivery issues, and two cousins in matching white tees offered twenty separate theories without evidence.",
       deck: "Culinary outrage spreads block by block as seasoning hopes collapse.",
     },
     {
+      category: "services",
       title: `Laundromat change machine jams again, forcing grown adults into desperate quarter diplomacy.`,
       body:
         "Sources say two aunties brokered a peace deal near Dryer 6 while a toddler ate a cheese puff in silence. Witnesses described a tense economy built on loose coins, wrinkled dollar bills, and desperate eye contact. Management posted a note saying the machine was being serviced, but nobody in the building believed that shit for even one second.",
@@ -372,7 +563,12 @@ function renderNews(data) {
   const articles = fakeArticles(data);
   state.articles = articles;
   elements.newsGrid.innerHTML = "";
-  articles.forEach((article, index) => {
+  const filtered =
+    state.articleCategory === "all"
+      ? articles
+      : articles.filter((article) => article.category === state.articleCategory);
+  filtered.forEach((article) => {
+    const index = articles.indexOf(article);
     const card = document.createElement("article");
     card.className = "news-card";
     card.innerHTML = `<h3>${article.title}</h3><p>${article.body}</p>`;
@@ -389,6 +585,90 @@ function renderNews(data) {
     `Corner stores, bus stops, and beauty supply parking lots remain on high alert.`,
   ];
   elements.newsTicker.textContent = tickerBits.join("     •     ");
+}
+
+function renderGossip(location) {
+  const seeds = getGossipSeeds(location);
+  elements.gossipGrid.innerHTML = "";
+  seeds.slice(0, 3).forEach((seed) => {
+    const card = document.createElement("article");
+    card.className = "gossip-card";
+    card.textContent = seed;
+    card.addEventListener("click", () => {
+      elements.dispatchRoast.textContent = `GOSSIP DESK: ${seed}`;
+      setStatus("BLOCK RUMOR UPDATED");
+    });
+    elements.gossipGrid.appendChild(card);
+  });
+}
+
+function renderHotline(location) {
+  const messages = getHotlineMessages(location);
+  elements.hotlineList.innerHTML = "";
+  messages.forEach((message) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "hotline-item";
+    button.textContent = message;
+    button.addEventListener("click", () => {
+      elements.alertScreen.textContent = message;
+      setStatus("HOTLINE PLAYING LOUD-ASS MESSAGE");
+    });
+    elements.hotlineList.appendChild(button);
+  });
+}
+
+function renderScanner(location, chaotic = false) {
+  const incidents = getScannerIncidents(location);
+  const picks = incidents.sort(() => Math.random() - 0.5).slice(0, chaotic ? 5 : 3);
+  elements.scannerScreen.innerHTML = "";
+  picks.forEach((incident) => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "scanner-item";
+    row.textContent = incident;
+    row.addEventListener("click", () => {
+      elements.readerTitle.textContent = "BLOCK SCANNER INCIDENT FILE";
+      elements.readerDek.textContent = "Dispatch audio cleaned up only slightly. Language remains reckless as hell.";
+      elements.readerBody.innerHTML = `<p>${incident}</p>`;
+      elements.readerModal.hidden = false;
+    });
+    elements.scannerScreen.appendChild(row);
+  });
+}
+
+function renderBlotter(location) {
+  const notes = getCrimeBlotter(location);
+  elements.blotterGrid.innerHTML = "";
+  notes.slice(0, 4).forEach((note) => {
+    const card = document.createElement("article");
+    card.className = "blotter-card";
+    card.textContent = note;
+    card.addEventListener("click", () => {
+      elements.readerTitle.textContent = "CRIME BLOTTER ENTRY";
+      elements.readerDek.textContent = "Neighborhood incident log compiled by nosy people with good hearing.";
+      elements.readerBody.innerHTML = `<p>${note}</p>`;
+      elements.readerModal.hidden = false;
+    });
+    elements.blotterGrid.appendChild(card);
+  });
+}
+
+function renderBoozeRun(location) {
+  const runs = getBoozeRuns(location);
+  const pick = runs[Math.floor(Math.random() * runs.length)];
+  elements.boozeRunLabel.textContent = pick.banner;
+  elements.boozePlan.textContent = pick.plan;
+  elements.lineStatus.textContent = pick.line;
+  elements.riskLevel.textContent = pick.risk;
+}
+
+function renderPopupAd(location) {
+  const ads = getPopupAds(location);
+  const choice = ads[Math.floor(Math.random() * ads.length)];
+  elements.popupTitle.textContent = choice.title;
+  elements.popupCopy.textContent = choice.copy;
+  elements.popupAd.hidden = false;
 }
 
 function openReader(index) {
@@ -423,6 +703,26 @@ function randomizeNeighborhoodChaos() {
   setStatus("BLOCK SHOOK. NEW FOOLISHNESS POSTED");
 }
 
+function rerollAlert() {
+  if (!state.forecast) {
+    return;
+  }
+  const alerts = getAlertMessages(state.forecast.location);
+  elements.alertScreen.textContent = alerts[Math.floor(Math.random() * alerts.length)];
+  setStatus("ALERT BOARD UPDATED");
+}
+
+function triggerPanicMode() {
+  document.body.classList.add("panic-mode");
+  elements.alertScreen.classList.add("alarm");
+  rerollAlert();
+  setStatus("PANIC MODE ACTIVATED. EVERYBODY ACT STUPID.");
+  window.setTimeout(() => {
+    document.body.classList.remove("panic-mode");
+    elements.alertScreen.classList.remove("alarm");
+  }, 2200);
+}
+
 function rerollExcuse() {
   if (!state.forecast) {
     return;
@@ -452,6 +752,42 @@ function rerollRoast() {
     `The sky over ${state.forecast.location.city} look like it came to start mess and borrow gas money.`,
   ];
   elements.roastLine.textContent = variations[Math.floor(Math.random() * variations.length)];
+}
+
+function dropAnonymousTip() {
+  if (!state.forecast) {
+    return;
+  }
+  const tips = [
+    `ANONYMOUS TIP: Somebody at the minimart says the forecast got a side chick, a fake chain, and no reliable transportation.`,
+    `ANONYMOUS TIP: Word is the clouds seen outside arguing over who forgot to bring the damn shade to ${state.forecast.location.city}.`,
+    `ANONYMOUS TIP: A barber reported the heat walked in like it owned the block and left smelling like cheap cologne and bad intentions.`,
+    `ANONYMOUS TIP: The block believes this weather personally hates errands, hair maintenance, and anybody wearing all white.`,
+  ];
+  const tip = tips[Math.floor(Math.random() * tips.length)];
+  elements.dispatchRoast.textContent = tip;
+  elements.alertScreen.textContent = tip;
+  setStatus("ANONYMOUS MESS JUST HIT THE DESK");
+}
+
+function openHotlineReader() {
+  if (!state.forecast) {
+    return;
+  }
+  const messages = getHotlineMessages(state.forecast.location);
+  elements.readerTitle.textContent = "GANGSTACAST HOTLINE TRANSCRIPT";
+  elements.readerDek.textContent = "Callers from around the neighborhood continue to report outrageous levels of weather-related disrespect.";
+  elements.readerBody.innerHTML = "";
+  messages.forEach((message) => {
+    const p = document.createElement("p");
+    p.textContent = message;
+    elements.readerBody.appendChild(p);
+  });
+  elements.readerModal.hidden = false;
+}
+
+function renderPollResult(location, selection = "weather") {
+  elements.pollResult.textContent = getPollResponse(selection, location);
 }
 
 function renderAnalytics(data) {
@@ -563,8 +899,16 @@ function renderForecast(data) {
 
   renderAnalytics(data);
   renderNews(data);
+  renderGossip(location);
+  renderHotline(location);
+  renderBlotter(location);
+  renderScanner(location);
+  renderBoozeRun(location);
+  renderPollResult(location);
   renderHourly(hourly);
   renderWeek(daily);
+  rerollAlert();
+  renderPopupAd(location);
 }
 
 async function loadForecast(query = { city: state.city }) {
@@ -633,11 +977,57 @@ elements.searchForm.addEventListener("submit", (event) => {
 });
 
 elements.locateButton.addEventListener("click", locateUser);
+elements.boozeButton.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  renderBoozeRun(state.forecast.location);
+  setStatus("BOOZE REPORT UPDATED");
+});
 elements.shakeButton.addEventListener("click", randomizeNeighborhoodChaos);
+elements.panicButton.addEventListener("click", triggerPanicMode);
+elements.tipButton.addEventListener("click", dropAnonymousTip);
 elements.excuseButton.addEventListener("click", rerollExcuse);
 elements.roastButton.addEventListener("click", rerollRoast);
+elements.hotlineButton.addEventListener("click", openHotlineReader);
+elements.gossipSeedButton.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  renderGossip(state.forecast.location);
+  setStatus("NEW BLOCK GOSSIP JUST DROPPED");
+});
+elements.gossipClearButton.addEventListener("click", () => {
+  elements.gossipGrid.innerHTML = '<article class="gossip-card">Everybody got quiet for a second. Suspicious as hell.</article>';
+  setStatus("GOSSIP TEMPORARILY WIPED");
+});
+elements.alertButton.addEventListener("click", rerollAlert);
+elements.sirenButton.addEventListener("click", triggerPanicMode);
+elements.scannerButton.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  renderScanner(state.forecast.location);
+  setStatus("NEW INCIDENTS CRACKLIN ON THE SCANNER");
+});
+elements.scannerChaosButton.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  renderScanner(state.forecast.location, true);
+  triggerPanicMode();
+});
 elements.readerBackdrop.addEventListener("click", closeReader);
 elements.readerClose.addEventListener("click", closeReader);
+elements.popupClose.addEventListener("click", () => {
+  elements.popupAd.hidden = true;
+});
+elements.popupShuffle.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  renderPopupAd(state.forecast.location);
+});
 elements.communityBoard.addEventListener("click", (event) => {
   const item = event.target.closest("li");
   if (!item) {
@@ -645,6 +1035,77 @@ elements.communityBoard.addEventListener("click", (event) => {
   }
   elements.dispatchRoast.textContent = `COMMUNITY REPORT: ${item.textContent}`;
   setStatus("NEIGHBORHOOD TEA UPDATED");
+});
+elements.reporterCards.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!state.forecast) {
+      return;
+    }
+    const take = getReporterTake(button.dataset.reporter, state.forecast.location);
+    elements.readerTitle.textContent = "FIELD REPORT";
+    elements.readerDek.textContent = "Local correspondents continue to be loud, underpaid, and extremely correct.";
+    elements.readerBody.innerHTML = `<p>${take}</p>`;
+    elements.readerModal.hidden = false;
+  });
+});
+elements.pollGrid.addEventListener("click", (event) => {
+  const button = event.target.closest(".poll-option");
+  if (!button || !state.forecast) {
+    return;
+  }
+  elements.pollGrid.querySelectorAll(".poll-option").forEach((item) => item.classList.remove("active"));
+  button.classList.add("active");
+  renderPollResult(state.forecast.location, button.dataset.poll);
+  setStatus("BLOCK POLL UPDATED WITH UNNECESSARY CONFIDENCE");
+});
+elements.suspectList.addEventListener("click", (event) => {
+  const button = event.target.closest(".suspect-card");
+  if (!button || !state.forecast) {
+    return;
+  }
+  const file = getSuspectFile(button.dataset.suspect, state.forecast.location);
+  elements.readerTitle.textContent = file.title;
+  elements.readerDek.textContent = file.deck;
+  elements.readerBody.innerHTML = `<p>${file.body}</p>`;
+  elements.readerModal.hidden = false;
+  setStatus("SUSPECT FILE OPENED");
+});
+elements.tvGuide.addEventListener("click", (event) => {
+  const item = event.target.closest("li");
+  if (!item) {
+    return;
+  }
+  elements.readerTitle.textContent = "TONIGHT ON GANGSTACAST";
+  elements.readerDek.textContent = "Programming for people who love weather, drama, and unnecessary volume.";
+  elements.readerBody.innerHTML = `<p>${item.textContent}</p><p>This episode is sponsored by loud opinions, porch chairs, and a city budget held together with one zip tie and blind faith.</p>`;
+  elements.readerModal.hidden = false;
+  setStatus("TV GUIDE OPENED");
+});
+elements.navTabs.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveButtons(elements.navTabs, button.dataset.tab);
+    if (button.dataset.tab === "news") {
+      window.scrollTo({ top: elements.newsGrid.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+    } else if (button.dataset.tab === "gossip") {
+      window.scrollTo({ top: elements.gossipGrid.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+    } else if (button.dataset.tab === "alerts") {
+      window.scrollTo({ top: elements.alertScreen.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+    } else if (button.dataset.tab === "scanner") {
+      window.scrollTo({ top: elements.scannerScreen.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+    } else if (button.dataset.tab === "ads") {
+      elements.popupAd.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+});
+elements.categoryChips.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.articleCategory = button.dataset.category;
+    setActiveButtons(elements.categoryChips, state.articleCategory, "category");
+    if (state.forecast) {
+      renderNews(state.forecast);
+    }
+  });
 });
 
 elements.cityInput.addEventListener("input", () => {
