@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gangsta Forecast 2001</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="page-bg"></div>
+    <main class="portal">
+      <header class="masthead">
+        <div class="logo-wrap">
+          <div class="logo-box">
+            <span class="logo-top">WWW.GANGSTAFORECAST.COM</span>
+            <h1>GANGSTA FORECAST 2001</h1>
+            <p class="tagline">Weather, rumors, lies, local drama, and neighborhood conditions.</p>
+          </div>
+          <div class="counter-box">
+            <span>VISITORS SINCE Y2K:</span>
+            <strong>00<span id="visitorCounter">80431</span></strong>
+            <marquee behavior="alternate" scrollamount="6">WEATHER SO REAL IT MIGHT OWE YOU MONEY AND A DAMN APOLOGY</marquee>
+          </div>
+        </div>
+        <div class="blink-row">
+          <span class="blink">BREAKING SKY BULLSH*T</span>
+          <span class="blink alt">LOUD-ASS CLOUD WARNING</span>
+          <span class="blink">UMBRELLA CHECKPOINT, NO PUNK S**T</span>
+        </div>
+        <div class="ticker-shell">
+          <marquee id="newsTicker" scrollamount="8">
+            Welcome to Gangsta Forecast 2001 where the sky gets roasted, the rain gets cussed out, and
+            everybody on the block files complaints against the atmosphere in real time.
+          </marquee>
+        </div>
+      </header>
+
+      <section class="utility-bar">
+        <form id="searchForm" class="search-box">
+          <label for="cityInput">Type your block, cousin, and let's see what kind of bullsh*t the sky on:</label>
+          <input id="cityInput" name="city" type="text" placeholder="Los Angeles" autocomplete="off" />
+          <button type="submit">CHECK THAT HOOD</button>
+          <div class="suggestions-box" id="suggestionsBox" hidden></div>
+        </form>
+        <div class="utility-buttons">
+          <button id="locateButton" type="button">FIND MY CORNER</button>
+          <button id="shakeButton" type="button">SHAKE THE BLOCK</button>
+          <div class="unit-switch" id="unitToggle">
+            <button class="unit-button active" type="button" data-unit="imperial">F</button>
+            <button class="unit-button" type="button" data-unit="metric">C</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="top-grid">
+        <article class="box hero-box">
+          <div class="box-title">TODAY ON THE BLOCK, FOR REAL</div>
+          <div class="hero-split">
+            <div>
+              <p class="eyebrow" id="locationLabel">CHECKIN LOS ANGELES</p>
+              <div class="big-temp" id="currentTemp">--</div>
+              <p class="hero-condition" id="currentTitle">Sky loading</p>
+              <p class="hero-copy" id="currentTagline">Hold up while the clouds snitch and say some dumb shit.</p>
+              <div class="status-tape" id="statusPill">PULLIN SKY GOSSIP AND PETTY BULLSH*T</div>
+            </div>
+            <div class="roast-panel">
+              <div class="mini-title">OFFICIAL SKY ROAST</div>
+              <p id="roastLine">This weather look like it borrowed your lawn chair, cussed out your cousin, and never brought shit back.</p>
+              <div class="quote-fake">"Neighborhood approved."</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="box side-box">
+          <div class="box-title">FREQUENT FLYER HOODS, HOT ZONES, AND REGULAR MESS</div>
+          <div class="chip-cloud" id="recentCities"></div>
+          <hr />
+          <div class="mini-title">PUBLIC SERVICE SHADE</div>
+          <p id="dispatchAdvice">Boots if muddy. Hoodie if moody. Water if the sun acting like a bitch.</p>
+          <p id="dispatchExcuse">Certified excuse generator loading foul language.</p>
+          <div class="button-stack">
+            <button id="excuseButton" type="button">PRINT NEW EXCUSE</button>
+            <button id="roastButton" type="button">ROAST THIS DAMN SKY AGAIN</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <aside class="left-rail">
+          <article class="box rail-box">
+            <div class="box-title">WEATHER STATS THEY CAN'T HIDE FOR SHIT</div>
+            <dl class="stat-list">
+              <div><dt>BLOCK TEMP</dt><dd id="feelsLike">--</dd></div>
+              <div><dt>AIR WEIGHT</dt><dd id="humidity">--</dd></div>
+              <div><dt>WIND FADE</dt><dd id="wind">--</dd></div>
+              <div><dt>RAIN SHAKEDOWN</dt><dd id="precipitation">--</dd></div>
+              <div><dt>CLOUD BLANKET</dt><dd id="cloudCover">--</dd></div>
+              <div><dt>PRESSURE PACK</dt><dd id="pressure">--</dd></div>
+              <div><dt>CAN YOU SEE?</dt><dd id="visibility">--</dd></div>
+              <div><dt>SUN FADE</dt><dd id="uvIndex">--</dd></div>
+            </dl>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">CRIME REPORT FOR THESE SHADY-ASS CLOUDS</div>
+            <div class="threat-board">
+              <div class="score-row">
+                <strong id="threatScore">--</strong>
+                <span id="threatLevel">BUILDIN THE CASE</span>
+              </div>
+              <div class="danger-meter">
+                <div class="danger-fill" id="threatFill"></div>
+              </div>
+              <p id="threatSummary">Waiting for the sky to say some incriminating dumb shit.</p>
+            </div>
+            <div class="petty-grid">
+              <div>
+                <h4>LIGHTNING FOOLISHNESS</h4>
+                <strong id="lightningRisk">--</strong>
+                <p id="lightningCopy">No reads yet.</p>
+              </div>
+              <div>
+                <h4>SKY PETTY METER</h4>
+                <strong id="moodIndex">--</strong>
+                <p id="moodCopy">Still judging the clouds.</p>
+              </div>
+              <div>
+                <h4>RAIN ON SOME BS</h4>
+                <strong id="rainHustle">--</strong>
+                <p id="rainCopy">No nonsense report yet.</p>
+              </div>
+              <div>
+                <h4>WIND THROWIN HANDS</h4>
+                <strong id="windHands">--</strong>
+                <p id="windCopy">No fade data yet.</p>
+              </div>
+            </div>
+          </article>
+        </aside>
+
+        <section class="main-column">
+          <article class="box news-box">
+            <div class="box-title">FAKE NEWS THEY DEFINITELY SAID ON SOME BULLSH*T CHANNEL 8</div>
+            <p class="subhead news-tip">CLICK ANY HEADLINE TO READ THE FULL MESS</p>
+            <div class="news-grid" id="newsGrid">
+              <article class="news-card">
+                <h3>Corner store owner says ice machine "gave up like a bitch" right before the heat wave.</h3>
+                <p>Customers responded with disappointment, sweating, and extremely theatrical cussing.</p>
+              </article>
+              <article class="news-card">
+                <h3>Bus driver pauses route to argue with a shopping cart rolling itself across traffic.</h3>
+                <p>Witnesses say both sides felt disrespected and neither one planned to de-escalate.</p>
+              </article>
+              <article class="news-card">
+                <h3>Laundromat AC still broke, residents now folding clothes in what officials call "hostile humidity."</h3>
+                <p>Authorities have offered thoughts, prayers, and absolutely no damn timeline.</p>
+              </article>
+            </div>
+          </article>
+
+          <article class="box dispatch-box">
+            <div class="box-title">LIVE PETTY DISPATCHES AND OTHER LOUD-ASS OBSERVATIONS</div>
+            <div class="dispatch-grid">
+              <div class="dispatch-card">
+                <div class="mini-title">ROAST</div>
+                <p id="dispatchRoast">Waiting on the first atmospheric insult and unnecessary disrespect.</p>
+              </div>
+              <div class="dispatch-card">
+                <div class="mini-title">ADVICE</div>
+                <p id="dispatchAdviceMain">Please prepare emotionally for whatever dumb shit outside got planned.</p>
+              </div>
+              <div class="dispatch-card">
+                <div class="mini-title">ALIBI</div>
+                <p id="dispatchExcuseMain">We are preparing a bold-ass lie for why you showed up late.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="box radar-box">
+            <div class="box-title">HOOD SKY MAP AND OTHER NOSY-ASS BUSINESS</div>
+            <div class="map-placeholder">
+              <div class="map-header">
+                <span id="mapLabel">Radar posted up and watching.</span>
+                <span id="timezoneLabel">Timezone locked and outside.</span>
+              </div>
+              <div class="fake-map">
+                <div class="grid-overlay"></div>
+                <div class="radar-sweep"></div>
+                <div class="map-crosshair"></div>
+                <div class="map-stamp">RADAR FEED: NOSY AS HELL</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="box hourly-box">
+            <div class="box-title">NEXT 12 HOURS OF FOOLISHNESS AND GENERAL FUCKERY</div>
+            <p class="subhead" id="hourlyLabel">Quick rundown for the next little minute.</p>
+            <div class="hourly-strip" id="hourlyStrip"></div>
+          </article>
+
+          <article class="box week-box">
+            <div class="box-title">SEVEN-DAY NONSENSE CALENDAR FROM HELL</div>
+            <div class="week-grid" id="forecastGrid"></div>
+          </article>
+        </section>
+
+        <aside class="right-rail">
+          <article class="box rail-box">
+            <div class="box-title">CLASSIFIEDS AND DESPERATE BULLSH*T</div>
+            <ul class="retro-list">
+              <li>Umbrella for sale. Slight emotional damage. Still loyal as hell.</li>
+              <li>Need three people to help push a busted Buick before the rain start talkin shit.</li>
+              <li>Somebody please claim this folding chair before the wind turn it into a weapon.</li>
+              <li>Looking for one extension cord brave enough for a porch fan and a bad decision.</li>
+            </ul>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">COMMUNITY BOARD FOR COMPLAINTS AND CUSSIN</div>
+            <ul class="retro-list interactive-list" id="communityBoard">
+              <li>Do not trust "partly cloudy." That is cloud propaganda and weak-ass PR spin.</li>
+              <li>EBT reader down again at the corner store and now everybody mad in line.</li>
+              <li>The beauty supply parking lot got one pothole with a personal vendetta.</li>
+              <li>Whoever keep double-parking at the fish spot, your ass will be discussed at the next meeting.</li>
+              <li>The sun be doing too much. Emergency hater meeting Thursday.</li>
+            </ul>
+          </article>
+
+          <article class="box rail-box">
+            <div class="box-title">LATE PASS OFFICE AND EXCUSE WAREHOUSE</div>
+            <p class="late-pass" id="latePass">
+              This certifies that weather-related foolishness may have interfered with your punctuality.
+            </p>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <template id="forecastCardTemplate">
+      <article class="week-card">
+        <div class="week-day"></div>
+        <div class="week-label"></div>
+        <div class="week-temps"></div>
+        <div class="week-meta"></div>
+      </article>
+    </template>
+
+    <template id="hourCardTemplate">
+      <article class="hour-card">
+        <div class="hour-time"></div>
+        <div class="hour-temp"></div>
+        <div class="hour-label"></div>
+        <div class="hour-meta"></div>
+      </article>
+    </template>
+
+    <div class="reader-modal" id="readerModal" hidden>
+      <div class="reader-backdrop" id="readerBackdrop"></div>
+      <article class="reader-panel">
+        <div class="reader-top">
+          <span class="mini-title">CHANNEL 8 AFTER DARK</span>
+          <button id="readerClose" type="button">X</button>
+        </div>
+        <h2 id="readerTitle">Headline loading...</h2>
+        <p class="reader-dek" id="readerDek">Stand by while the newsroom lies with confidence.</p>
+        <div class="reader-body" id="readerBody"></div>
+      </article>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
