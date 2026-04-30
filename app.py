@@ -570,6 +570,13 @@ def post_chat_message(name: str, text: str) -> dict:
     return entry
 
 
+def log_chat_message(entry: dict, client_ip: str) -> None:
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    safe_name = str(entry.get("name", "")).replace("\n", " ").replace("\r", " ")
+    safe_text = str(entry.get("text", "")).replace("\n", " ").replace("\r", " ")
+    print(f"[CHAT] {timestamp} ip={client_ip} name={safe_name} text={safe_text}", flush=True)
+
+
 def read_visitor_store() -> dict:
     if not VISITOR_STORE_PATH.exists():
         return {"total": 0, "visitors": {}}
@@ -734,6 +741,7 @@ class WeatherHandler(SimpleHTTPRequestHandler):
         try:
             payload = json.loads(self.rfile.read(length or 0) or b"{}")
             entry = post_chat_message(str(payload.get("name", "")), str(payload.get("text", "")))
+            log_chat_message(entry, self.client_address[0] if self.client_address else "unknown")
             body = json.dumps({"message": entry}).encode("utf-8")
             self.send_response(HTTPStatus.CREATED)
         except ValueError as error:
