@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+import time
 from datetime import datetime, timedelta
 import urllib.error
 import urllib.parse
@@ -13,6 +15,10 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+CHAT_STORE_PATH = BASE_DIR / "chat_messages.json"
+CHAT_TTL_SECONDS = 5 * 60
+CHAT_MAX_MESSAGES = 10
+CHAT_LOCK = threading.Lock()
 
 
 WEATHER_CODES = {
@@ -515,6 +521,52 @@ def build_forecast(city: str | None = None, latitude: float | None = None, longi
         return build_forecast_metno(place)
 
 
+def read_chat_messages() -> list[dict]:
+    if not CHAT_STORE_PATH.exists():
+        return []
+    try:
+        return json.loads(CHAT_STORE_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def write_chat_messages(messages: list[dict]) -> None:
+    CHAT_STORE_PATH.write_text(json.dumps(messages, ensure_ascii=True), encoding="utf-8")
+
+
+def prune_chat_messages(messages: list[dict], now: float | None = None) -> list[dict]:
+    current_time = now if now is not None else time.time()
+    fresh = [message for message in messages if current_time - float(message.get("createdAt", 0)) < CHAT_TTL_SECONDS]
+    return fresh[-CHAT_MAX_MESSAGES:]
+
+
+def get_chat_payload() -> dict:
+    with CHAT_LOCK:
+        messages = prune_chat_messages(read_chat_messages())
+        write_chat_messages(messages)
+    return {"messages": messages}
+
+
+def post_chat_message(name: str, text: str) -> dict:
+    trimmed_name = " ".join(name.strip().split())[:32] or "BLOCK CITIZEN"
+    trimmed_text = " ".join(text.strip().split())[:280]
+    if not trimmed_text:
+        raise ValueError("Message came through empty as hell.")
+
+    now = time.time()
+    entry = {
+        "id": f"{int(now * 1000)}-{os.getpid()}",
+        "name": trimmed_name,
+        "text": trimmed_text,
+        "createdAt": now,
+    }
+    with CHAT_LOCK:
+        messages = prune_chat_messages(read_chat_messages(), now=now)
+        messages.append(entry)
+        write_chat_messages(messages)
+    return entry
+
+
 class WeatherHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
@@ -527,9 +579,19 @@ class WeatherHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/locations":
             self.handle_locations(parsed.query)
             return
+        if parsed.path == "/api/chat":
+            self.handle_chat_get()
+            return
         if parsed.path == "/":
             self.path = "/index.html"
         return super().do_GET()
+
+    def do_POST(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/chat":
+            self.handle_chat_post()
+            return
+        self.send_error(HTTPStatus.NOT_FOUND, "This endpoint ain't here.")
 
     def handle_forecast(self, query_string: str) -> None:
         params = urllib.parse.parse_qs(query_string)
@@ -581,6 +643,39 @@ class WeatherHandler(SimpleHTTPRequestHandler):
             self.send_response(HTTPStatus.BAD_GATEWAY)
         except Exception:
             body = json.dumps({"results": [], "error": "Location search caught an attitude."}).encode("utf-8")
+            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def handle_chat_get(self) -> None:
+        body = json.dumps(get_chat_payload()).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def handle_chat_post(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+
+        try:
+            payload = json.loads(self.rfile.read(length or 0) or b"{}")
+            entry = post_chat_message(str(payload.get("name", "")), str(payload.get("text", "")))
+            body = json.dumps({"message": entry}).encode("utf-8")
+            self.send_response(HTTPStatus.CREATED)
+        except ValueError as error:
+            body = json.dumps({"error": str(error)}).encode("utf-8")
+            self.send_response(HTTPStatus.BAD_REQUEST)
+        except Exception:
+            body = json.dumps({"error": "Chat line down. Try again in a minute."}).encode("utf-8")
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
 
         self.send_header("Content-Type", "application/json; charset=utf-8")

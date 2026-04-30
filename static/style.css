@@ -338,6 +338,7 @@ button {
 .rail-box,
 .news-box,
 .dispatch-box,
+.chat-box,
 .radar-box,
 .hourly-box,
 .week-box {
@@ -1126,6 +1127,78 @@ hr {
   color: #5d0079;
   line-height: 1.5;
   font-size: 0.88rem;
+}
+
+.chat-form {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.chat-form textarea {
+  resize: vertical;
+  min-height: 78px;
+}
+
+.chat-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.chat-status {
+  color: #5d0079;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.chat-feed {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.chat-message {
+  border: 3px ridge #fff;
+  background: linear-gradient(180deg, #fff8be, #ffd167);
+  padding: 10px 12px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.chat-message--empty {
+  color: #6c175d;
+  font-weight: 700;
+}
+
+.chat-message-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.chat-message-name {
+  color: #0017c7;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.chat-message-time {
+  color: #7a004f;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.chat-message-text {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .suspect-card {

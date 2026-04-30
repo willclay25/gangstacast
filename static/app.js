@@ -1,4 +1,5 @@
 const RECENT_CITIES_KEY = "weatherstation-recent-cities";
+const CHAT_NAME_KEY = "weatherstation-chat-name";
 
 const state = {
   city: "Langston, Oklahoma",
@@ -16,6 +17,8 @@ const state = {
   popupIntervalId: null,
   fieldReports: [],
   fieldReportIndex: 0,
+  chatMessages: [],
+  chatPollIntervalId: null,
 };
 
 const elements = {
@@ -99,6 +102,11 @@ const elements = {
   fieldReportFrame: document.querySelector("#fieldReportFrame"),
   fieldReportCaption: document.querySelector("#fieldReportCaption"),
   fieldReportNext: document.querySelector("#fieldReportNext"),
+  chatForm: document.querySelector("#chatForm"),
+  chatNameInput: document.querySelector("#chatNameInput"),
+  chatMessageInput: document.querySelector("#chatMessageInput"),
+  chatStatus: document.querySelector("#chatStatus"),
+  chatFeed: document.querySelector("#chatFeed"),
   readerModal: document.querySelector("#readerModal"),
   readerBackdrop: document.querySelector("#readerBackdrop"),
   readerClose: document.querySelector("#readerClose"),
@@ -134,6 +142,18 @@ function shuffled(list) {
 
 function pickMany(list, count) {
   return shuffled(list).slice(0, count);
+}
+
+async function readJsonResponse(response, fallbackMessage) {
+  const raw = await response.text();
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    if (!response.ok) {
+      throw new Error(`${fallbackMessage} Server came back with some busted HTML instead of JSON.`);
+    }
+    throw new Error(fallbackMessage);
+  }
 }
 
 function buildFieldReportEmbedUrl(url) {
@@ -213,6 +233,20 @@ function renderRecentCities() {
   });
 }
 
+function loadChatName() {
+  try {
+    return localStorage.getItem(CHAT_NAME_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function saveChatName(name) {
+  try {
+    localStorage.setItem(CHAT_NAME_KEY, name);
+  } catch {}
+}
+
 function renderUnitButtons() {
   elements.unitToggle.querySelectorAll(".unit-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.unit === state.unit);
@@ -237,6 +271,109 @@ function storyPossessivePlace(location) {
 
 function displayLocationLabel(location) {
   return hasNamedCity(location) ? formatLocationLabel(location) : "Current Location";
+}
+
+function formatChatAge(createdAt) {
+  const secondsAgo = Math.max(0, Math.floor(Date.now() / 1000 - Number(createdAt)));
+  if (secondsAgo < 10) {
+    return "just now";
+  }
+  if (secondsAgo < 60) {
+    return `${secondsAgo}s ago`;
+  }
+  const minutesAgo = Math.floor(secondsAgo / 60);
+  return `${minutesAgo}m ago`;
+}
+
+function renderChat(messages = state.chatMessages) {
+  state.chatMessages = messages.slice(-10);
+  elements.chatFeed.innerHTML = "";
+  if (!state.chatMessages.length) {
+    const empty = document.createElement("article");
+    empty.className = "chat-message chat-message--empty";
+    empty.textContent = "The block quiet right now. Somebody start some shit.";
+    elements.chatFeed.appendChild(empty);
+    return;
+  }
+
+  state.chatMessages
+    .slice()
+    .reverse()
+    .forEach((message) => {
+      const card = document.createElement("article");
+      card.className = "chat-message";
+      const top = document.createElement("div");
+      top.className = "chat-message-top";
+      const name = document.createElement("span");
+      name.className = "chat-message-name";
+      name.textContent = message.name;
+      const time = document.createElement("span");
+      time.className = "chat-message-time";
+      time.textContent = formatChatAge(message.createdAt);
+      const text = document.createElement("p");
+      text.className = "chat-message-text";
+      text.textContent = message.text;
+      top.append(name, time);
+      card.append(top, text);
+      elements.chatFeed.appendChild(card);
+    });
+}
+
+async function refreshChat({ silent = false } = {}) {
+  try {
+    const response = await fetch("/api/chat");
+    const payload = await readJsonResponse(response, "Chat line came back crooked.");
+    if (!response.ok) {
+      throw new Error(payload.error || "Chat acting funny as hell.");
+    }
+    renderChat(payload.messages || []);
+    elements.chatStatus.textContent = state.chatMessages.length
+      ? `Live block line loaded. ${state.chatMessages.length} loud mouth${state.chatMessages.length === 1 ? "" : "s"} active.`
+      : "Live block line open. Nobody talking reckless yet.";
+  } catch (error) {
+    if (!silent) {
+      elements.chatStatus.textContent = error.message || "Chat line down bad right now.";
+    }
+  }
+}
+
+function startChatPolling() {
+  if (state.chatPollIntervalId) {
+    window.clearInterval(state.chatPollIntervalId);
+  }
+  refreshChat();
+  state.chatPollIntervalId = window.setInterval(() => {
+    refreshChat({ silent: true });
+  }, 10000);
+}
+
+async function submitChatMessage(event) {
+  event.preventDefault();
+  const name = elements.chatNameInput.value.trim() || "BLOCK CITIZEN";
+  const text = elements.chatMessageInput.value.trim();
+  if (!text) {
+    elements.chatStatus.textContent = "Type some shit first.";
+    return;
+  }
+
+  elements.chatStatus.textContent = "Sending your mess to the block...";
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, text }),
+    });
+    const payload = await readJsonResponse(response, "Chat post got mangled.");
+    if (!response.ok) {
+      throw new Error(payload.error || "Chat post got rejected.");
+    }
+    saveChatName(name);
+    elements.chatMessageInput.value = "";
+    elements.chatStatus.textContent = "Message posted. The block sees you.";
+    await refreshChat({ silent: true });
+  } catch (error) {
+    elements.chatStatus.textContent = error.message;
+  }
 }
 
 function setActiveButtons(buttons, value, key = "tab") {
@@ -1728,6 +1865,7 @@ elements.fieldReportNext.addEventListener("click", () => {
   }
   advanceFieldReport();
 });
+elements.chatForm.addEventListener("submit", submitChatMessage);
 elements.gossipSeedButton.addEventListener("click", () => {
   if (!state.forecast) {
     return;
@@ -1898,5 +2036,7 @@ elements.unitToggle.addEventListener("click", (event) => {
 
 renderUnitButtons();
 renderRecentCities();
+elements.chatNameInput.value = loadChatName();
+startChatPolling();
 elements.visitorCounter.textContent = String(80431 + Math.floor(Math.random() * 500));
 locateUser({ fallbackToDefault: true });
