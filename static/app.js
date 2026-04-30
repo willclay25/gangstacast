@@ -13,6 +13,7 @@ const state = {
   articles: [],
   articleCategory: "all",
   articleLocationKey: "",
+  popupIntervalId: null,
 };
 
 const elements = {
@@ -91,6 +92,7 @@ const elements = {
   reporterCards: document.querySelectorAll(".reporter-card"),
   suspectList: document.querySelector("#suspectList"),
   tvGuide: document.querySelector("#tvGuide"),
+  nightShiftList: document.querySelector("#nightShiftList"),
   communityBoard: document.querySelector("#communityBoard"),
   readerModal: document.querySelector("#readerModal"),
   readerBackdrop: document.querySelector("#readerBackdrop"),
@@ -103,6 +105,12 @@ const elements = {
   popupShuffle: document.querySelector("#popupShuffle"),
   popupTitle: document.querySelector("#popupTitle"),
   popupCopy: document.querySelector("#popupCopy"),
+  classifiedsList: document.querySelector("#classifiedsList"),
+  ebtStatus: document.querySelector("#ebtStatus"),
+  arrestsToday: document.querySelector("#arrestsToday"),
+  arrestsYtd: document.querySelector("#arrestsYtd"),
+  gradeRate: document.querySelector("#gradeRate"),
+  jobsGrid: document.querySelector("#jobsGrid"),
   forecastTemplate: document.querySelector("#forecastCardTemplate"),
   hourTemplate: document.querySelector("#hourCardTemplate"),
 };
@@ -117,6 +125,10 @@ function clamp(value, min, max) {
 
 function shuffled(list) {
   return [...list].sort(() => Math.random() - 0.5);
+}
+
+function pickMany(list, count) {
+  return shuffled(list).slice(0, count);
 }
 
 function thunderLikely(code) {
@@ -353,6 +365,11 @@ function getNeighborhoodBulletins(location) {
     `Neighborhood memo says somebody's uncle is still on the porch giving a weather speech nobody asked for.`,
     `Alert from the hood desk: beauty supply parking lot energy remains chaotic with a 90% chance of horn abuse.`,
     `Public notice: if the fish spot line wraps around the building, that is not weather-related but it still feels important.`,
+    `Block bulletin: one busted shopping cart is still free-ranging near ${storyPlace(location)} and developing a disturbing amount of confidence.`,
+    "Neighborhood reminder: if the corner store chicken smell too strong before noon, proceed with hope but not trust.",
+    "Transit notice: if the bus driver got a thousand-yard stare, do not ask for special stops or life advice.",
+    "Civic update: somebody already blamed the weather for a breakup, a flat tire, and two overdue bills before lunch.",
+    "Porch desk confirms at least three people are outside giving incorrect but passionate weather testimony right now.",
   ];
 }
 
@@ -376,6 +393,18 @@ function getBoozeRuns(location) {
       line: "Current line status says two regulars talking too much and one cousin buying exactly one stale-ass honey bun.",
       risk: "High petty-crime energy. Somebody definitely trying to sell cologne, headphones, or an unlocked phone by the entrance.",
     },
+    {
+      banner: `Emergency beer and brown-liquor operations on ${storyPlace(location)} now threatened by one long line and two men arguing over scratch-off science.`,
+      plan: "Fastest move: enter with purpose, avoid the ATM philosopher, and do not get stuck behind anybody counting pennies from a Crown Royal bag.",
+      line: "Line status ugly. One lady buying six Fireballs, one charger cord, and enough disappointment for everybody.",
+      risk: "High. Excellent chance of side quests, unnecessary storytelling, and one trunk speaker demonstration.",
+    },
+    {
+      banner: `Weekend cooler patrol near ${storyPlace(location)} reports rising demand for cheap vodka, loose ice, and one suspiciously legal-looking receipt.`,
+      plan: "Recommended route: hit the side fridge first, secure your bag, and don't let nobody rope you into a second stop.",
+      line: "Line moving in spiritual slow motion thanks to lottery rituals and a cashier fighting the barcode gun.",
+      risk: "Very elevated. Parking lot vibes one argument away from becoming local history.",
+    },
   ];
 }
 
@@ -387,6 +416,11 @@ function getCrimeBlotter(location) {
     `Suspicious weather loitering observed over the block. Clouds seen circling with criminal intent and zero explanation.`,
     `Petty theft report: somebody walked off with three lighters, one sports drink, and a confidence level that felt federally illegal.`,
     `Noise complaint filed against thunder, porch dice, and one cousin laughing way too damn hard at 1:12 AM.`,
+    `Fake plate investigation opened after one Altima left the scene of a curb assault and three emotional support cones.`,
+    `Public urination charge narrowly avoided after one drunk uncle lost a fight with his own belt behind the fish market.`,
+    `Milk crate burglary suspected after two porch seats vanished and reappeared at a dice game six blocks over.`,
+    `Suspicious cologne salesman observed near the gas station offering "designer scents" from a backpack and an unreliable grin.`,
+    `Complaint filed after somebody attempted to pawn a half-working pressure washer, a lawn gnome, and one angry ferret.`,
   ];
 }
 
@@ -400,6 +434,12 @@ function getScannerIncidents(location) {
     `SCANNER 6: Chicken spot says fryer oil acting suspicious, drink machine dripping lies, and customers still ordering like rent not due.`,
     `SCANNER 7: Bus stop bench leaning like it heard all the gossip and want no more part of this raggedy-ass block.`,
     `SCANNER 8: Local porch committee confirms the weather got a slick mouth, fake smile, and too much damn free time.`,
+    `SCANNER 9: Loose extension cord seen crossing sidewalk like it pay rent there. Children warned, elders already annoyed.`,
+    `SCANNER 10: Tire shine dispute escalating outside hand-wash lot after one man accused another of "wasting gloss on a weak-ass sedan."`,
+    `SCANNER 11: Two aunties at beauty supply nearly came to words over the last bonnet dryer and a disrespectful coupon policy.`,
+    `SCANNER 12: Somebody grilling under a carport despite visible rain and seven direct warnings from everybody with sense.`,
+    `SCANNER 13: Check-cashing line now divided into two political parties over whether the pen got stolen or simply quit.`,
+    `SCANNER 14: Teen on mini-bike circling ${storyPlace(location)} with no helmet, no fear, and one speaker playing pure felony soundtrack.`,
   ];
 }
 
@@ -457,6 +497,219 @@ function getPopupAds(location) {
       title: "HOTLINE SPONSOR ALERT",
       copy: "This weather warning brought to you by the corner store fan section and whoever still selling DVDs from a duffel bag.",
     },
+    {
+      title: "HELLCAT FINANCE BONANZA",
+      copy: `Drive off ${storyPlace(location)} in a loud-ass Hellcat today. 49% interest, no credit app needed, just vibes, bad math, and a signature that look nervous.`,
+    },
+    {
+      title: "FRIED CHICKEN SIDE HUSTLE",
+      copy: "Parking-lot chicken plates available till they sell out or the cooler starts leaking. Includes bread, attitude, and one mystery hot sauce packet.",
+    },
+    {
+      title: "SWIM LESSONS FOR THE HARDHEADED",
+      copy: "Learn not to panic in 4 feet of water from Coach Splash and his cousin with one whistle and no patience.",
+    },
+    {
+      title: "PAPERWORK-COMPLICATED PERFORMANCE PARTS",
+      copy: "Fast little metal things for people who ask too many questions. Cash only, no receipts, no eye contact, definitely no damn warranty.",
+    },
+    {
+      title: "CASH CAR LOT LIQUIDATION",
+      copy: "New inventory just dropped: loud mufflers, soft brakes, dashboard lights on like Christmas, and confidence stronger than the engine.",
+    },
+    {
+      title: "HELLCAT WITH PAPERWORK ISSUES",
+      copy: "No-credit monster coupe financing available tonight only. APR disrespectful, title situation conversational, test drive depends on who asking.",
+    },
+    {
+      title: "TRUNK FULL OF SEAFOOD SPECIAL",
+      copy: "Shrimp, catfish, crab legs, and one wet extension cord available till the ice tap out. Pull up with cash and low standards.",
+    },
+    {
+      title: "YARD SALE BAILOUT EVENT",
+      copy: `Buy two TVs, one fake designer belt, and a speaker with emotional damage somewhere on ${storyPlace(location)} this weekend.`,
+    },
+    {
+      title: "AFTER HOURS DRIVING SCHOOL",
+      copy: "Learn lane discipline from people who personally do not believe in lane discipline. Parallel parking extra.",
+    },
+    {
+      title: "GRAND OPENING: UNC'S TAX SERVICE",
+      copy: "We file fast, talk louder, and ask only a few legally uncomfortable questions.",
+    },
+    {
+      title: "POOL LESSONS & PAROLE VIBES",
+      copy: "Beginner swim class behind the rec center. Bring towel, courage, and don't ask why the instructor got on house shoes.",
+    },
+    {
+      title: "CHOPPED FINANCE EXPO",
+      copy: "Drive something loud off the lot tonight with one paycheck stub, two references, and faith stronger than your transmission.",
+    },
+  ];
+}
+
+function getClassifieds(location) {
+  return [
+    `FOR SALE: 2006 Impala with 3 working windows, 1 confused door, and absolutely no title but a powerful backstory.`,
+    `HELP WANTED: Need four cousins and one jack to move a dead Crown Vic off ${storyPlace(location)} before the city start writing notes.`,
+    "ISO: Sedan that changed identities recently. Paperwork complicated, questions discouraged, trunk space preferred.",
+    "MISSING FATHER ALERT: Last seen saying he was 'just grabbing squares' in 2014. If found, tell him the phone bill got hands.",
+    "FOR SALE: Scrap metal pile with spiritual value, two hubcaps, and one bent-ass screen door. Bring gloves and low expectations.",
+    "NEED HELP: Looking for somebody brave enough to install a window AC unit held together by prayer and one stripped screw.",
+    "FOR SALE: Clapped-out Tahoe with a heroic speaker system and an ignition routine that feels like a secret handshake.",
+    "ISO: Reliable person to watch a barbecue grill, a toddler, and one uncle who lies after dark. Pay: plate and maybe gas money.",
+    `MISSING: Gold front tooth somewhere between the fish spot and ${storyPlace(location)}. Reward depends on who asking.`,
+    "FOR SALE: Buick on borrowed time. Engine knocks like law enforcement and the trunk smell is none of your business.",
+    "SCRAP METAL PICKUP: We got rust, bad intentions, and three broken washing machines. Must haul tonight.",
+    "ISO: Someone with a trailer to rescue a Monte Carlo that currently believes in itself more than it should.",
+    "FOR SALE: Hellcat with paperwork that gets vague after page two. Pulls hard, drinks premium, and attracts bad decisions.",
+    "HELP NEEDED: Need one cousin with jumper cables, one with patience, and one who know how to lie to a tow truck driver.",
+    "ISO: Father figure with valid license, decent knees, and willingness to explain taxes without yelling.",
+    "FOR SALE: Two pitbull puppies, one karaoke machine, and a busted deep freezer. Will trade for rims or child-care help.",
+    "MISSING: One catalytic converter, three lottery tickets, and the last honest mechanic on this side of town.",
+    `HELP WANTED: Need somebody to stand near ${storyPlace(location)} fish spot and tell people the line ain't that long when it obviously is.`,
+    "FOR SALE: Crown Vic with cloth seats, 19 former lives, and enough cigarette smell to legally count as history.",
+    "ISO: Night nurse, scrap hauler, babysitter, and part-time alibi specialist. Same person preferred.",
+    "MISSING FATHER ALERT: If located, please advise he still owes hair-money, birthday money, and one serious apology.",
+    "SCRAP METAL BONANZA: Old gutters, shopping cart pieces, busted dryer drum, and one suspicious muffler. Must lift with your legs.",
+    "FOR SALE: Altima with one hot rim, one cold case, and no title but plenty character.",
+    "HELP WANTED: Need somebody to help move couch, fridge, and one uncle who fell asleep on both.",
+    "ISO: Temporary pond digger for kids who already in swimsuits and not listening to reason.",
+  ];
+}
+
+function getEconomics(location) {
+  const cityFactor = storyPlace(location).length;
+  const ebtStates = [
+    "ONLINE BUT TOUCHY",
+    "DOWN AT TWO STORES",
+    "ACTING WEIRD NEAR THE FREEZER AISLE",
+    "WORKING FOR NOW, DON'T JINX IT",
+    "HALF ONLINE, HALF DEMONIC",
+    "CASH ONLY TILL THEY REBOOT THE BOX",
+    "ONE REGISTER UP, THREE EMPLOYEES MAD",
+  ];
+  return {
+    ebt: ebtStates[Math.floor(Math.random() * ebtStates.length)],
+    arrestsToday: 37 + cityFactor + Math.floor(Math.random() * 18),
+    arrestsYtd: 8421 + cityFactor * 31 + Math.floor(Math.random() * 900),
+    gradeRate: 0,
+  };
+}
+
+function getJobs(location) {
+  return [
+    {
+      title: "Assistant Porch Meteorologist",
+      company: "Unc Darnell Weather Group",
+      detail: `Must point at clouds on ${storyPlace(location)} and say 'mm-hmm' like you know something.`,
+    },
+    {
+      title: "Corner Store Line Coordinator",
+      company: "Quick Cash & Snacks",
+      detail: "Responsibilities include side-eye management, exact-change diplomacy, and yelling 'next' with conviction.",
+    },
+    {
+      title: "Parking Lot Peace Officer",
+      company: "Liquor Mart Security-ish",
+      detail: "Must break up loud arguments between two people who both parked terrible.",
+    },
+    {
+      title: "Emergency Chicken Plate Runner",
+      company: "Auntie Wing Logistics",
+      detail: "Fast feet, no complaints, and willing to ignore three unrelated felonies in progress.",
+    },
+    {
+      title: "Weather Excuse Specialist",
+      company: "Late Pass Depot",
+      detail: "Draft believable lies blaming heat, rain, wind, and cousin-related setbacks.",
+    },
+    {
+      title: "Scrap Metal Acquisition Intern",
+      company: "Loose Parts Holdings",
+      detail: "Should not ask where the mufflers came from. Steel toes preferred, ethics optional.",
+    },
+    {
+      title: "EBT Reader Emotional Support Associate",
+      company: "Budget Mart Front End",
+      detail: "Stand by the card machine and tell people 'try it one more time' like it means something.",
+    },
+    {
+      title: "After-Hours Pool Safety Marshal",
+      company: "Rec Center-ish",
+      detail: `Must whistle at kids on ${storyPlace(location)} and pretend everybody respects whistles.`,
+    },
+    {
+      title: "Chicken Plate Logistics Coordinator",
+      company: "Parking Lot Poultry LLC",
+      detail: "Balance styrofoam boxes, argue about mild sauce, and move fast when the weather get slick.",
+    },
+    {
+      title: "Temporary Hellcat Payment Optimist",
+      company: "No Credit Big Engine Outlet",
+      detail: "Explain 49% APR like it's a blessing and not a full financial uppercut.",
+    },
+    {
+      title: "Missing Father Outreach Specialist",
+      company: "Community Disappointment Board",
+      detail: "Post flyers, accept excuses, and answer zero follow-up questions from grown men in fitted caps.",
+    },
+    {
+      title: "Gas Station Gambling Consultant",
+      company: "Lucky Lemonade & Fuel",
+      detail: "Must advise strangers on scratch-offs with the confidence of a failed prophet.",
+    },
+  ];
+}
+
+function getCommunityBoardItems(location) {
+  return [
+    'Do not trust "partly cloudy." That is cloud propaganda and weak-ass PR spin.',
+    "EBT reader down again at the corner store and now everybody mad in line.",
+    "The beauty supply parking lot got one pothole with a personal vendetta.",
+    "Whoever keep double-parking at the fish spot, your ass will be discussed at the next meeting.",
+    "The sun be doing too much. Emergency hater meeting Thursday.",
+    `Whoever keep leaving busted couches near ${storyPlace(location)} dumpster, we know your curtains and we will talk.`,
+    "If your muffler louder than your life plan, please reroute.",
+    "Stop asking to borrow jumper cables if your battery been spiritually dead since winter.",
+    "Nobody wants to hear your crypto pitch in the liquor store line.",
+    "If your uncle start saying he can fix air conditioners with one butter knife, leave immediately.",
+    "Respectfully, stop setting off fireworks every time the weather look festive.",
+    "If your car got no plates, no mirror, and all confidence, park further down.",
+  ];
+}
+
+function getNightShiftRules(location) {
+  return [
+    "No walking into the liquor store line with scratch-offs, impatience, and no damn plan.",
+    "If the clouds look criminal, grab your bottle, your snacks, and get your ass home.",
+    "Do not debate sports, weather, and child support near the beer fridge after 10 PM.",
+    'If somebody say "watch my car real quick," the answer is hell no.',
+    `After midnight on ${storyPlace(location)}, every argument sounds louder and every bad idea feel cheaper. Resist both.`,
+    "Do not follow a side quest involving pool tables, borrowed cash, or mysterious seafood coolers.",
+    "If somebody whisper 'easy money' near the gas station, your night already off track.",
+    "Never trust a dude selling electronics from a trunk while chewing sunflower seeds with conviction.",
+    "If the card machine go down, leave before the speeches start.",
+    "No swim lessons, no fist fights, no child support math by the parking-lot light poles.",
+  ];
+}
+
+function getTvPrograms(location) {
+  return [
+    "5:00 PM: Auntie Stormwatch and the Case of the Stolen Lawn Chair",
+    "5:30 PM: EBT Reader Crimes Unit",
+    "6:00 PM: Niggas in the Parking Lot Yelling at the Sky",
+    "6:30 PM: Fish Spot Shortages: Lemon Pepper Gone Again",
+    "7:00 PM: Live on the Porch with UNC DARNELL",
+    `7:30 PM: ${storyPlace(location)} Vice - Chicken Plates, Tail Lights, and Poor Decisions`,
+    "8:00 PM: Missing Fathers: Special Victims Birthday Unit",
+    "8:30 PM: Who Parked This Buick Like That?",
+    "9:00 PM: First 48 Minutes at the Corner Store",
+    "9:30 PM: Pool Lesson After Dark: Somebody Gone Slip",
+    "10:00 PM: Scrap Metal Millionaires",
+    "10:30 PM: Hellcat Payments and Other Regrets",
+    "11:00 PM: City Bus Door Beef: Reunion Special",
+    "11:30 PM: Unsolved Front Tooth Mysteries",
   ];
 }
 
@@ -467,6 +720,11 @@ function getAlertMessages(location) {
     `STREET WARNING: WIND, HEAT, OR RAIN MAY TRY TO HUMBLE YOU IN PUBLIC TODAY.`,
     `EMERGENCY BULLETIN: SOMEBODY UNCLE ALREADY BLAMED THE FORECAST FOR EVERYTHING SINCE 1998.`,
     `PUBLIC SAFETY NOTE: IF THE CLOUDS LOOK PETTY, TAKE YOUR BUSINESS ELSEWHERE.`,
+    `SEVERE PETTINESS WATCH: ${storyPlace(location).toUpperCase()} MAY EXPERIENCE LOUD OPINIONS, FAST CLOUDS, AND CROOKED PARKING IN THE NEXT HOUR.`,
+    "FLASH WARNING: DO NOT TRUST ANYBODY SAYING 'IT'S PROBABLY GONNA PASS' WITHOUT A DEGREE OR AT LEAST A CLEAN T-SHIRT.",
+    "COMMUNITY CAUTION: IF THE LIQUOR STORE LINE START WRAPPING, YOUR EVENING ALREADY UNDER ATTACK.",
+    "WEATHER TASK FORCE UPDATE: THE SKY STILL HASN'T EXPLAINED ITSELF AND THE BLOCK FINDS THAT EXTREMELY SUSPICIOUS.",
+    "PUBLIC ADVISORY: KEEP YOUR SHOES, YOUR TEMPER, AND YOUR SMALL BILLS READY AT ALL TIMES.",
   ];
 }
 
@@ -477,6 +735,11 @@ function getGossipSeeds(location) {
     "A woman by the bus stop said the weather app lied and now she beefing with technology itself.",
     "Two cousins are arguing whether the wind hate braids specifically or just joy in general.",
     "Local rumor says the sky been acting dramatic because Mercury somewhere minding nobody's business.",
+    "A dude by the check-cashing spot said the thunder sounded personal and honestly nobody could fully disagree.",
+    "Word is one of the clouds over the block got a fake name, three kids, and a side hustle fixing rims badly.",
+    "Somebody auntie says the rain only show up when she deep-condition her hair, and evidence is starting to stack.",
+    `Gossip desk hearing that the breeze on ${storyPlace(location)} been flirting with loose flyers and cheap wigs all afternoon.`,
+    "A quiet man outside the laundromat nodded at the sky like he knew exactly what crooked shit it was about to do.",
   ];
 }
 
@@ -486,6 +749,11 @@ function getHotlineMessages(location) {
     'HOTLINE MESSAGE: "If this wind touch my plate again, I am writing my congressman."',
     'HOTLINE MESSAGE: "Tell the humidity to square up or calm down, pick one."',
     'HOTLINE MESSAGE: "I knew them clouds was fake when they smiled too hard this morning."',
+    'HOTLINE MESSAGE: "Somebody tell the rain I got errands and weak emotional stability."',
+    'HOTLINE MESSAGE: "If this heat keep pressing me, I am calling everybody from city hall to my pastor."',
+    `HOTLINE MESSAGE: "Whatever going on over ${storyPlace(location)}, I need a refund, a voucher, and one apology."`,
+    'HOTLINE MESSAGE: "The wind just stole my receipt and now I feel legally attacked."',
+    'HOTLINE MESSAGE: "Do not let my cousin outside. He already blaming the barometric pressure for his child support."',
   ];
 }
 
@@ -860,6 +1128,84 @@ function renderPopupAd(location) {
   elements.popupAd.hidden = false;
 }
 
+function startPopupRotation(location) {
+  if (state.popupIntervalId) {
+    window.clearInterval(state.popupIntervalId);
+  }
+  state.popupIntervalId = window.setInterval(() => {
+    renderPopupAd(location);
+  }, 30000);
+}
+
+function renderClassifieds(location) {
+  const ads = pickMany(getClassifieds(location), 10);
+  elements.classifiedsList.innerHTML = "";
+  ads.forEach((listing) => {
+    const item = document.createElement("article");
+    item.className = "classified-card";
+    item.textContent = listing;
+    elements.classifiedsList.appendChild(item);
+  });
+}
+
+function renderEconomics(location) {
+  const stats = getEconomics(location);
+  elements.ebtStatus.textContent = stats.ebt;
+  elements.arrestsToday.textContent = String(stats.arrestsToday);
+  elements.arrestsYtd.textContent = String(stats.arrestsYtd);
+  elements.gradeRate.textContent = String(stats.gradeRate);
+}
+
+function openJob404(job) {
+  elements.readerTitle.textContent = "404 JOB NOT FOUND";
+  elements.readerDek.textContent = "The opportunity you clicked has moved, vanished, folded, or got filled by somebody's cousin.";
+  elements.readerBody.innerHTML = `<p><strong>${job.title}</strong> at ${job.company}</p><p>${job.detail}</p><p>Error code: BLOCK-404. Please lower your expectations and try another fake-ass job listing later.</p>`;
+  elements.readerModal.hidden = false;
+}
+
+function renderJobs(location) {
+  const jobs = pickMany(getJobs(location), 6);
+  elements.jobsGrid.innerHTML = "";
+  jobs.forEach((job) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "job-card";
+    card.innerHTML = `<strong>${job.title}</strong><span>${job.company}</span><p>${job.detail}</p>`;
+    card.addEventListener("click", () => openJob404(job));
+    elements.jobsGrid.appendChild(card);
+  });
+}
+
+function renderCommunityBoard(location) {
+  const items = pickMany(getCommunityBoardItems(location), 6);
+  elements.communityBoard.innerHTML = "";
+  items.forEach((text) => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    elements.communityBoard.appendChild(item);
+  });
+}
+
+function renderNightShiftRules(location) {
+  const rules = pickMany(getNightShiftRules(location), 5);
+  elements.nightShiftList.innerHTML = "";
+  rules.forEach((text) => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    elements.nightShiftList.appendChild(item);
+  });
+}
+
+function renderTvGuide(location) {
+  const programs = pickMany(getTvPrograms(location), 6);
+  elements.tvGuide.innerHTML = "";
+  programs.forEach((text) => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    elements.tvGuide.appendChild(item);
+  });
+}
+
 function openReader(index) {
   const article = state.articles[index];
   if (!article) {
@@ -1095,11 +1441,18 @@ function renderForecast(data) {
   renderBlotter(location);
   renderScanner(location);
   renderBoozeRun(location);
+  renderClassifieds(location);
+  renderEconomics(location);
+  renderJobs(location);
+  renderCommunityBoard(location);
+  renderNightShiftRules(location);
+  renderTvGuide(location);
   renderPollResult(location);
   renderHourly(hourly);
   renderWeek(daily);
   rerollAlert();
   renderPopupAd(location);
+  startPopupRotation(location);
 }
 
 async function loadForecast(query = { city: state.city }) {

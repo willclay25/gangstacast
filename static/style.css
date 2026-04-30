@@ -545,6 +545,9 @@ hr {
 .news-card,
 .dispatch-card,
 .blotter-card,
+.classified-card,
+.econ-card,
+.job-card,
 .hour-card,
 .week-card {
   border: 3px outset #fff;
@@ -576,6 +579,62 @@ hr {
 
 .blotter-card:hover {
   background: #ffe0b1;
+}
+
+.classifieds-list,
+.economics-grid,
+.jobs-grid {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.classified-card {
+  border-style: dashed;
+  background: #fff1c4;
+  line-height: 1.6;
+}
+
+.economics-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.econ-card {
+  background: #fff6d7;
+}
+
+.econ-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #0017c7;
+  font-size: 1.05rem;
+}
+
+.jobs-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.job-card {
+  text-align: left;
+  background: linear-gradient(180deg, #fff2a2, #ffc45c);
+}
+
+.job-card strong,
+.job-card span,
+.job-card p {
+  display: block;
+}
+
+.job-card span {
+  margin-top: 6px;
+  color: #7a004f;
+  font-size: 0.85rem;
+}
+
+.job-card p {
+  margin: 10px 0 0;
+  line-height: 1.5;
+  font-size: 0.92rem;
 }
 
 .news-card h3 {
@@ -982,6 +1041,8 @@ hr {
   .news-grid,
   .dispatch-grid,
   .blotter-grid,
+  .economics-grid,
+  .jobs-grid,
   .gossip-grid,
   .week-grid,
   .hourly-strip {
@@ -1008,6 +1069,8 @@ hr {
   .news-grid,
   .dispatch-grid,
   .blotter-grid,
+  .economics-grid,
+  .jobs-grid,
   .gossip-grid,
   .week-grid,
   .hourly-strip,
