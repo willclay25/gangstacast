@@ -1,5 +1,6 @@
 const RECENT_CITIES_KEY = "weatherstation-recent-cities";
 const CHAT_NAME_KEY = "weatherstation-chat-name";
+const VISITOR_ID_KEY = "weatherstation-visitor-id";
 
 const state = {
   city: "Langston, Oklahoma",
@@ -19,6 +20,7 @@ const state = {
   fieldReportIndex: 0,
   chatMessages: [],
   chatPollIntervalId: null,
+  visitorHeartbeatIntervalId: null,
 };
 
 const elements = {
@@ -70,6 +72,7 @@ const elements = {
   hourlyStrip: document.querySelector("#hourlyStrip"),
   recentCities: document.querySelector("#recentCities"),
   visitorCounter: document.querySelector("#visitorCounter"),
+  liveVisitorCounter: document.querySelector("#liveVisitorCounter"),
   boozeRunLabel: document.querySelector("#boozeRunLabel"),
   boozeButton: document.querySelector("#boozeButton"),
   shakeButton: document.querySelector("#shakeButton"),
@@ -247,6 +250,20 @@ function saveChatName(name) {
   } catch {}
 }
 
+function getVisitorId() {
+  try {
+    const existing = localStorage.getItem(VISITOR_ID_KEY);
+    if (existing) {
+      return existing;
+    }
+    const created = `vc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(VISITOR_ID_KEY, created);
+    return created;
+  } catch {
+    return `vc-fallback-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
 function renderUnitButtons() {
   elements.unitToggle.querySelectorAll(".unit-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.unit === state.unit);
@@ -319,6 +336,10 @@ function renderChat(messages = state.chatMessages) {
     });
 }
 
+function countUniqueChatNames(messages = state.chatMessages) {
+  return new Set(messages.map((message) => message.name)).size;
+}
+
 async function refreshChat({ silent = false } = {}) {
   try {
     const response = await fetch("/api/chat");
@@ -327,8 +348,9 @@ async function refreshChat({ silent = false } = {}) {
       throw new Error(payload.error || "Chat acting funny as hell.");
     }
     renderChat(payload.messages || []);
-    elements.chatStatus.textContent = state.chatMessages.length
-      ? `Live block line loaded. ${state.chatMessages.length} loud mouth${state.chatMessages.length === 1 ? "" : "s"} active.`
+    const uniqueNames = countUniqueChatNames();
+    elements.chatStatus.textContent = uniqueNames
+      ? `Live block line loaded. ${uniqueNames} loud mouth${uniqueNames === 1 ? "" : "s"} active.`
       : "Live block line open. Nobody talking reckless yet.";
   } catch (error) {
     if (!silent) {
@@ -374,6 +396,43 @@ async function submitChatMessage(event) {
   } catch (error) {
     elements.chatStatus.textContent = error.message;
   }
+}
+
+function formatVisitorTotal(total) {
+  return String(total).padStart(5, "0");
+}
+
+function renderVisitorCounts(payload) {
+  elements.visitorCounter.textContent = formatVisitorTotal(payload.total || 0);
+  elements.liveVisitorCounter.textContent = String(payload.live || 0);
+}
+
+async function refreshVisitorCounts({ touch = false } = {}) {
+  try {
+    const visitorId = getVisitorId();
+    const response = await fetch("/api/visitors", {
+      method: touch ? "POST" : "GET",
+      headers: touch ? { "Content-Type": "application/json" } : undefined,
+      body: touch ? JSON.stringify({ visitorId }) : undefined,
+    });
+    const payload = await readJsonResponse(response, "Visitor counter came back crooked.");
+    if (!response.ok) {
+      throw new Error(payload.error || "Visitor counter acting up.");
+    }
+    renderVisitorCounts(payload);
+  } catch {
+    elements.liveVisitorCounter.textContent = "--";
+  }
+}
+
+function startVisitorHeartbeat() {
+  if (state.visitorHeartbeatIntervalId) {
+    window.clearInterval(state.visitorHeartbeatIntervalId);
+  }
+  refreshVisitorCounts({ touch: true });
+  state.visitorHeartbeatIntervalId = window.setInterval(() => {
+    refreshVisitorCounts({ touch: true });
+  }, 30000);
 }
 
 function setActiveButtons(buttons, value, key = "tab") {
@@ -2038,5 +2097,5 @@ renderUnitButtons();
 renderRecentCities();
 elements.chatNameInput.value = loadChatName();
 startChatPolling();
-elements.visitorCounter.textContent = String(80431 + Math.floor(Math.random() * 500));
+startVisitorHeartbeat();
 locateUser({ fallbackToDefault: true });

@@ -19,6 +19,9 @@ CHAT_STORE_PATH = BASE_DIR / "chat_messages.json"
 CHAT_TTL_SECONDS = 5 * 60
 CHAT_MAX_MESSAGES = 10
 CHAT_LOCK = threading.Lock()
+VISITOR_STORE_PATH = BASE_DIR / "visitor_stats.json"
+VISITOR_HEARTBEAT_TTL_SECONDS = 75
+VISITOR_LOCK = threading.Lock()
 
 
 WEATHER_CODES = {
@@ -567,6 +570,62 @@ def post_chat_message(name: str, text: str) -> dict:
     return entry
 
 
+def read_visitor_store() -> dict:
+    if not VISITOR_STORE_PATH.exists():
+        return {"total": 0, "visitors": {}}
+    try:
+        payload = json.loads(VISITOR_STORE_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {"total": 0, "visitors": {}}
+    return {
+        "total": int(payload.get("total", 0)),
+        "visitors": payload.get("visitors", {}) if isinstance(payload.get("visitors", {}), dict) else {},
+    }
+
+
+def write_visitor_store(store: dict) -> None:
+    VISITOR_STORE_PATH.write_text(json.dumps(store, ensure_ascii=True), encoding="utf-8")
+
+
+def prune_active_visitors(visitors: dict, now: float | None = None) -> dict:
+    current_time = now if now is not None else time.time()
+    return {
+        visitor_id: float(last_seen)
+        for visitor_id, last_seen in visitors.items()
+        if current_time - float(last_seen) < VISITOR_HEARTBEAT_TTL_SECONDS
+    }
+
+
+def build_visitor_payload(store: dict) -> dict:
+    active = prune_active_visitors(store.get("visitors", {}))
+    return {"total": int(store.get("total", 0)), "live": len(active)}
+
+
+def touch_visitor(visitor_id: str) -> dict:
+    normalized = "".join(char for char in visitor_id.strip()[:80] if char.isalnum() or char in "-_")
+    if not normalized:
+        raise ValueError("Visitor ID missing.")
+
+    now = time.time()
+    with VISITOR_LOCK:
+        store = read_visitor_store()
+        visitors = prune_active_visitors(store.get("visitors", {}), now=now)
+        if normalized not in store.get("visitors", {}):
+            store["total"] = int(store.get("total", 0)) + 1
+        visitors[normalized] = now
+        store["visitors"] = visitors
+        write_visitor_store(store)
+        return build_visitor_payload(store)
+
+
+def get_visitor_payload() -> dict:
+    with VISITOR_LOCK:
+        store = read_visitor_store()
+        store["visitors"] = prune_active_visitors(store.get("visitors", {}))
+        write_visitor_store(store)
+        return build_visitor_payload(store)
+
+
 class WeatherHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
@@ -582,6 +641,9 @@ class WeatherHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/chat":
             self.handle_chat_get()
             return
+        if parsed.path == "/api/visitors":
+            self.handle_visitors_get()
+            return
         if parsed.path == "/":
             self.path = "/index.html"
         return super().do_GET()
@@ -590,6 +652,9 @@ class WeatherHandler(SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/chat":
             self.handle_chat_post()
+            return
+        if parsed.path == "/api/visitors":
+            self.handle_visitors_post()
             return
         self.send_error(HTTPStatus.NOT_FOUND, "This endpoint ain't here.")
 
@@ -676,6 +741,38 @@ class WeatherHandler(SimpleHTTPRequestHandler):
             self.send_response(HTTPStatus.BAD_REQUEST)
         except Exception:
             body = json.dumps({"error": "Chat line down. Try again in a minute."}).encode("utf-8")
+            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def handle_visitors_get(self) -> None:
+        body = json.dumps(get_visitor_payload()).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def handle_visitors_post(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+
+        try:
+            payload = json.loads(self.rfile.read(length or 0) or b"{}")
+            body = json.dumps(touch_visitor(str(payload.get("visitorId", "")))).encode("utf-8")
+            self.send_response(HTTPStatus.OK)
+        except ValueError as error:
+            body = json.dumps({"error": str(error)}).encode("utf-8")
+            self.send_response(HTTPStatus.BAD_REQUEST)
+        except Exception:
+            body = json.dumps({"error": "Visitor counter caught an attitude."}).encode("utf-8")
             self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
 
         self.send_header("Content-Type", "application/json; charset=utf-8")
