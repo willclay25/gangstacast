@@ -779,13 +779,25 @@ hr {
     radial-gradient(circle at 65% 55%, rgba(255, 255, 0, 0.4), transparent 14%),
     radial-gradient(circle at 75% 25%, rgba(255, 64, 64, 0.42), transparent 18%),
     linear-gradient(180deg, #03192d, #0e3f54);
+  filter: contrast(1.15) saturate(0.85) blur(0.2px);
+  box-shadow:
+    inset 0 0 24px rgba(0, 255, 170, 0.12),
+    inset 0 0 80px rgba(0, 0, 0, 0.55);
 }
 
 .grid-overlay,
 .radar-sweep,
-.map-crosshair {
+.map-crosshair,
+.fake-map::before,
+.fake-map::after {
   position: absolute;
   inset: 0;
+}
+
+.fake-map::before,
+.fake-map::after {
+  content: "";
+  pointer-events: none;
 }
 
 .grid-overlay {
@@ -793,12 +805,64 @@ hr {
     linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
   background-size: 36px 36px;
+  opacity: 0.55;
 }
 
 .radar-sweep {
-  background: conic-gradient(from 0deg, transparent, rgba(82, 255, 133, 0.38), transparent 30%);
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 292deg,
+      rgba(140, 255, 180, 0.05) 292deg 304deg,
+      rgba(120, 255, 165, 0.14) 304deg 316deg,
+      rgba(111, 255, 154, 0.32) 316deg 324deg,
+      rgba(194, 255, 214, 0.58) 324deg 326deg,
+      rgba(111, 255, 154, 0.18) 326deg 334deg,
+      rgba(80, 240, 140, 0.06) 334deg 344deg,
+      transparent 344deg 360deg
+    );
   animation: spin 5s linear infinite;
   transform-origin: center;
+  filter: blur(10px) saturate(1.15);
+  opacity: 0.9;
+}
+
+.radar-sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(190, 255, 210, 0.34) 0 2.5%, transparent 10%),
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 300deg,
+      rgba(150, 255, 185, 0.02) 300deg 314deg,
+      rgba(130, 255, 170, 0.08) 314deg 328deg,
+      rgba(190, 255, 214, 0.18) 328deg 331deg,
+      transparent 331deg 360deg
+    );
+  filter: blur(18px);
+  opacity: 0.8;
+}
+
+.fake-map::before {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.08) 0 1px,
+      rgba(0, 0, 0, 0.18) 1px 3px,
+      rgba(0, 0, 0, 0.02) 3px 5px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.52;
+}
+
+.fake-map::after {
+  background:
+    linear-gradient(90deg, rgba(255, 0, 0, 0.08), transparent 25%, transparent 75%, rgba(0, 180, 255, 0.08)),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+  animation: crt-flicker 180ms steps(2) infinite;
+  opacity: 0.45;
 }
 
 .map-crosshair::before,
@@ -831,6 +895,20 @@ hr {
   color: #56ff75;
   font-family: "Courier New", Courier, monospace;
   font-size: 0.74rem;
+}
+
+@keyframes crt-flicker {
+  0% {
+    opacity: 0.32;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 0.38;
+  }
 }
 
 @keyframes spin {
@@ -973,6 +1051,83 @@ hr {
   font-weight: 400;
 }
 
+.field-report-box {
+  padding: 0 12px 12px;
+}
+
+.field-report-feature-box {
+  padding-bottom: 12px;
+}
+
+.field-report-box--feature {
+  padding-top: 12px;
+}
+
+.field-report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 240px;
+  gap: 14px;
+  align-items: start;
+}
+
+.field-report-video {
+  margin-top: 8px;
+  border: 3px inset #fff;
+  background: #000;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.field-report-video--feature {
+  border-width: 4px;
+  box-shadow: 0 0 0 2px #14032d, 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.field-report-video iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.field-report-sidecar {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding-top: 8px;
+}
+
+.reporter-list--field {
+  padding: 0;
+}
+
+.field-report-caption {
+  margin: 10px 0 0;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.field-report-box--feature .field-report-caption {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.field-report-next {
+  width: fit-content;
+  padding: 8px 12px;
+  border: 3px outset #fff;
+  background: linear-gradient(180deg, #ffe676, #ff9f2b);
+  color: #1b0133;
+  font-weight: 700;
+}
+
+.field-report-note {
+  margin: 0;
+  color: #5d0079;
+  line-height: 1.5;
+  font-size: 0.88rem;
+}
+
 .suspect-card {
   background: linear-gradient(180deg, #fff7ab, #ffbf47);
 }
@@ -1050,6 +1205,10 @@ hr {
   }
 
   .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-report-layout {
     grid-template-columns: 1fr;
   }
 }

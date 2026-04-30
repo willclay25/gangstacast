@@ -14,6 +14,8 @@ const state = {
   articleCategory: "all",
   articleLocationKey: "",
   popupIntervalId: null,
+  fieldReports: [],
+  fieldReportIndex: 0,
 };
 
 const elements = {
@@ -89,11 +91,14 @@ const elements = {
   boozePlan: document.querySelector("#boozePlan"),
   lineStatus: document.querySelector("#lineStatus"),
   riskLevel: document.querySelector("#riskLevel"),
-  reporterCards: document.querySelectorAll(".reporter-card"),
+  reporterList: document.querySelector("#reporterList"),
   suspectList: document.querySelector("#suspectList"),
   tvGuide: document.querySelector("#tvGuide"),
   nightShiftList: document.querySelector("#nightShiftList"),
   communityBoard: document.querySelector("#communityBoard"),
+  fieldReportFrame: document.querySelector("#fieldReportFrame"),
+  fieldReportCaption: document.querySelector("#fieldReportCaption"),
+  fieldReportNext: document.querySelector("#fieldReportNext"),
   readerModal: document.querySelector("#readerModal"),
   readerBackdrop: document.querySelector("#readerBackdrop"),
   readerClose: document.querySelector("#readerClose"),
@@ -129,6 +134,21 @@ function shuffled(list) {
 
 function pickMany(list, count) {
   return shuffled(list).slice(0, count);
+}
+
+function buildFieldReportEmbedUrl(url) {
+  const base = url.replace("https://www.youtube.com/embed/", "https://www.youtube-nocookie.com/embed/");
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
+}
+
+function setFieldReport(report) {
+  if (!report) {
+    return;
+  }
+  elements.fieldReportFrame.src = buildFieldReportEmbedUrl(report.embedUrl);
+  elements.fieldReportFrame.title = "GangstaCast field report";
+  elements.fieldReportCaption.textContent = report.blurb || report.title;
 }
 
 function thunderLikely(code) {
@@ -453,29 +473,131 @@ function getPollResponse(key, location) {
   return responses[key] || "The poll machine jammed because the neighborhood answers came in too loud.";
 }
 
-function getSuspectFile(suspect, location) {
-  const files = {
-    sun: {
+function getReporterProfiles(location) {
+  return [
+    {
+      id: "big-shirl",
+      name: "BIG SHIRL",
+      blurb: "Storms, lies, and parking lot commentary",
+      take: `BIG SHIRL reporting live from ${storyPlace(location)}: "The sky got too much mouth and not enough accountability. Back to you, player."`,
+    },
+    {
+      id: "lil-ree",
+      name: "LIL REE",
+      blurb: "Corner store failures and heatwave slander",
+      take: `LIL REE here: "I checked three corner stores and two aunties. Consensus says the weather acting foul and the snacks are overpriced."`,
+    },
+    {
+      id: "unc-darnell",
+      name: "UNC DARNELL",
+      blurb: "Porch radar and unnecessary opinions",
+      take: `UNC DARNELL on the porch: "I seen worse in '86, but this bullshit still unnecessary. Y'all be safe and stop trusting pretty clouds."`,
+    },
+    {
+      id: "coco-flex",
+      name: "COCO FLEX",
+      blurb: "Beauty supply alarms and public shade",
+      take: `COCO FLEX reporting from ${storyPlace(location)}: "The sky got the nerve to look expensive while acting cheap. I've seen enough."`,
+    },
+    {
+      id: "dj-bone",
+      name: "DJ BONE",
+      blurb: "Night noise, car lots, and bad financing",
+      take: `DJ BONE live at the curb: "If the weather and these car notes both keep acting up, somebody finna cry in a parking lot."`,
+    },
+    {
+      id: "miss-keisha",
+      name: "MISS KEISHA",
+      blurb: "School pickup drama and cloud gossip",
+      take: `MISS KEISHA with the noon report: "These clouds been hanging around the block like they waiting on somebody to come outside and make a mistake."`,
+    },
+  ];
+}
+
+function getFieldReports(location) {
+  return [
+    {
+      id: "shauntel-1",
+      title: "Shauntel on scene with a microphone, bad signal, and no fear.",
+      embedUrl: "https://www.youtube.com/embed/g-Neg4NmChk",
+      blurb: `Live field tape from ${storyPlace(location)} where the reporting is loud and the production budget clearly got stolen.`,
+    },
+    {
+      id: "field-2",
+      title: "Parking lot witness statement getting way too passionate.",
+      embedUrl: "https://www.youtube.com/embed/uJtmQ5DAU3s",
+      blurb: `Fresh tape from ${storyPlace(location)} where the cameraman shaky, the facts incomplete, and the confidence still sky-high.`,
+    },
+    {
+      id: "field-3",
+      title: "Community update delivered with dangerous sincerity.",
+      embedUrl: "https://www.youtube.com/embed/8CwS83JVdqg",
+      blurb: `Another field report from ${storyPlace(location)} featuring loud commentary, weak signal, and exactly zero media training.`,
+    },
+    {
+      id: "field-4",
+      title: "Emergency neighborhood footage with absolutely no calming energy.",
+      embedUrl: "https://www.youtube.com/embed/gf7I43FKyQE",
+      blurb: `Tape from the block where somebody definitely yelled 'keep rolling' and nobody involved had a backup plan.`,
+    },
+  ];
+}
+
+function getSuspectProfiles(location) {
+  return [
+    {
+      id: "sun",
+      name: "THE SUN",
+      blurb: "Too damn bright and cocky",
       title: "PRIMARY SUSPECT: THE SUN",
       deck: "Charged with overheating sidewalks, bleaching car paint, and flexing too hard on innocent foreheads.",
       body: `Detectives on ${storyPlace(location)} say the sun has been seen hanging high, talking greasy, and making everybody's car seat feel like attempted murder. Witnesses report excessive shining, aggressive glare, and repeated acts of sweaty-ass intimidation.`,
     },
-    wind: {
+    {
+      id: "wind",
+      name: "THE WIND",
+      blurb: "Hands rated E for everybody",
       title: "PRIMARY SUSPECT: THE WIND",
       deck: "Wanted for slapping signs, flipping cheap umbrellas, and violating personal space blockwide.",
       body: `Residents allege the wind keeps running up on paper plates, front lace, loose receipts, and anybody carrying something important with both hands full. The suspect remains invisible, raggedy, and weirdly bold.`,
     },
-    rain: {
+    {
+      id: "rain",
+      name: "THE RAIN",
+      blurb: "Known shoe saboteur",
       title: "PRIMARY SUSPECT: THE RAIN",
       deck: "Known to target clean sneakers, fresh errands, and people who just said 'it don't look too bad outside.'",
       body: `Investigators say the rain often waits until folks leave the house to start its shady-ass performance. Charges include sock sabotage, puddle fraud, and emotional damage to one decent hoodie on ${storyPlace(location)}.`,
     },
-    clouds: {
+    {
+      id: "clouds",
+      name: "THE CLOUDS",
+      blurb: "Shady, loud, and uncooperative",
       title: "PRIMARY SUSPECT: THE CLOUDS",
       deck: "Charged with loitering over the neighborhood and acting moody with no explanation whatsoever.",
       body: `Block witnesses say these clouds have been moving in packs, looking dark, and giving off fake-calm energy before every fresh piece of nonsense. Their lawyer released no statement and one weak-ass shrug.`,
     },
-  };
+    {
+      id: "humidity",
+      name: "THE HUMIDITY",
+      blurb: "Sticky and disrespectful",
+      title: "PRIMARY SUSPECT: THE HUMIDITY",
+      deck: "Charged with attaching itself to necks, shirts, and otherwise decent moods without consent.",
+      body: `Witnesses on ${storyPlace(location)} say the humidity keeps creeping into every room, every shirt collar, and every argument like it paying rent nowhere and got all day.`,
+    },
+    {
+      id: "pollen",
+      name: "THE POLLEN",
+      blurb: "Sneezing with intent",
+      title: "PRIMARY SUSPECT: THE POLLEN",
+      deck: "Wanted for eye irritation, reckless floating, and seasonal terrorism against nostrils.",
+      body: `Residents insist the pollen rolled into ${storyPlace(location)} like powdered revenge, coating cars, porches, and every black outfit in the county with hateful confidence.`,
+    },
+  ];
+}
+
+function getSuspectFile(suspect, location) {
+  const files = Object.fromEntries(getSuspectProfiles(location).map((profile) => [profile.id, profile]));
   return files[suspect] || files.clouds;
 }
 
@@ -758,11 +880,7 @@ function getHotlineMessages(location) {
 }
 
 function getReporterTake(reporter, location) {
-  const takes = {
-    "big-shirl": `BIG SHIRL reporting live from ${storyPlace(location)}: "The sky got too much mouth and not enough accountability. Back to you, player."`,
-    "lil-ree": `LIL REE here: "I checked three corner stores and two aunties. Consensus says the weather acting foul and the snacks are overpriced."`,
-    "unc-darnell": `UNC DARNELL on the porch: "I seen worse in '86, but this bullshit still unnecessary. Y'all be safe and stop trusting pretty clouds."`,
-  };
+  const takes = Object.fromEntries(getReporterProfiles(location).map((profile) => [profile.id, profile.take]));
   return takes[reporter] || "Reporter unavailable due to outside foolishness.";
 }
 
@@ -1176,6 +1294,51 @@ function renderJobs(location) {
   });
 }
 
+function renderReporterCards(location) {
+  const reporters = pickMany(getReporterProfiles(location), 3);
+  elements.reporterList.innerHTML = "";
+  reporters.forEach((reporter) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "reporter-card";
+    card.dataset.reporter = reporter.id;
+    card.innerHTML = `${reporter.name}<br /><span>${reporter.blurb}</span>`;
+    elements.reporterList.appendChild(card);
+  });
+}
+
+function renderSuspectList(location) {
+  const suspects = pickMany(getSuspectProfiles(location), 4);
+  elements.suspectList.innerHTML = "";
+  suspects.forEach((suspect) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "suspect-card";
+    card.dataset.suspect = suspect.id;
+    card.innerHTML = `${suspect.name}<br /><span>${suspect.blurb}</span>`;
+    elements.suspectList.appendChild(card);
+  });
+}
+
+function renderFieldReport(location) {
+  state.fieldReports = shuffled(getFieldReports(location));
+  state.fieldReportIndex = 0;
+  const report = state.fieldReports[state.fieldReportIndex];
+  if (!report) {
+    return;
+  }
+  setFieldReport(report);
+}
+
+function advanceFieldReport() {
+  if (!state.fieldReports.length) {
+    return;
+  }
+  state.fieldReportIndex = (state.fieldReportIndex + 1) % state.fieldReports.length;
+  setFieldReport(state.fieldReports[state.fieldReportIndex]);
+  setStatus("NEXT FIELD TAPE LOADED");
+}
+
 function renderCommunityBoard(location) {
   const items = pickMany(getCommunityBoardItems(location), 6);
   elements.communityBoard.innerHTML = "";
@@ -1421,7 +1584,7 @@ function renderForecast(data) {
   elements.visibility.textContent = convertVisibility(current.visibility);
   elements.uvIndex.textContent = String(current.uvIndex);
   elements.timezoneLabel.textContent = `${location.timezone} • Sunrise ${formatTime(daily[0].sunrise)} • Sunset ${formatTime(daily[0].sunset)}`;
-  elements.mapLabel.textContent = `Radar says ${storyPlace(location)} got weather in the vicinity, bullshit on standby, and at least one cloud acting fake as hell.`;
+  elements.mapLabel.textContent = `Somebody stole the air conditioner out the radar building, and now we got Shauntel out there putting foil on the bunny ear antennas trying to keep ${storyPlace(location)} on the radar.`;
   elements.hourlyLabel.textContent = `Next 12 hours on ${storyPlace(location)}: who talkin shit, who drippin, who gettin blown sideways, and who need to sit they ass down.`;
 
   const dispatches = getDispatches(data);
@@ -1447,6 +1610,7 @@ function renderForecast(data) {
   renderCommunityBoard(location);
   renderNightShiftRules(location);
   renderTvGuide(location);
+  renderFieldReport(location);
   renderPollResult(location);
   renderHourly(hourly);
   renderWeek(daily);
@@ -1558,6 +1722,12 @@ elements.tipButton.addEventListener("click", dropAnonymousTip);
 elements.excuseButton.addEventListener("click", rerollExcuse);
 elements.roastButton.addEventListener("click", rerollRoast);
 elements.hotlineButton.addEventListener("click", openHotlineReader);
+elements.fieldReportNext.addEventListener("click", () => {
+  if (!state.forecast) {
+    return;
+  }
+  advanceFieldReport();
+});
 elements.gossipSeedButton.addEventListener("click", () => {
   if (!state.forecast) {
     return;
@@ -1604,17 +1774,16 @@ elements.communityBoard.addEventListener("click", (event) => {
   elements.dispatchRoast.textContent = `COMMUNITY REPORT: ${item.textContent}`;
   setStatus("NEIGHBORHOOD TEA UPDATED");
 });
-elements.reporterCards.forEach((button) => {
-  button.addEventListener("click", () => {
-    if (!state.forecast) {
-      return;
-    }
-    const take = getReporterTake(button.dataset.reporter, state.forecast.location);
-    elements.readerTitle.textContent = "FIELD REPORT";
-    elements.readerDek.textContent = "Local correspondents continue to be loud, underpaid, and extremely correct.";
-    elements.readerBody.innerHTML = `<p>${take}</p>`;
-    elements.readerModal.hidden = false;
-  });
+elements.reporterList.addEventListener("click", (event) => {
+  const button = event.target.closest(".reporter-card");
+  if (!button || !state.forecast) {
+    return;
+  }
+  const take = getReporterTake(button.dataset.reporter, state.forecast.location);
+  elements.readerTitle.textContent = "FIELD REPORT";
+  elements.readerDek.textContent = "Local correspondents continue to be loud, underpaid, and extremely correct.";
+  elements.readerBody.innerHTML = `<p>${take}</p>`;
+  elements.readerModal.hidden = false;
 });
 elements.pollGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".poll-option");
